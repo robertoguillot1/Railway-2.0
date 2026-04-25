@@ -7,7 +7,9 @@ from django.views.decorators.csrf import csrf_exempt
 from django.utils.decorators import method_decorator
 import openpyxl
 import json
-from .models import SensorReading, SystemEvent
+from .models import SensorReading, SystemEvent, SystemAlert
+from django.utils import timezone
+from datetime import timedelta
 from .serializers import SensorReadingSerializer, SystemEventSerializer
 from modules.devices.models import Device, Sensor, Actuator
 
@@ -106,6 +108,19 @@ class LegacyTelemetriaView(APIView):
                 if pump.state != new_state:
                     pump.state = new_state
                     pump.save()
+
+            # --- Lógica de Alerta de Conexión ---
+            recent_alert = SystemAlert.objects.filter(
+                title__icontains=device.device_id,
+                created_at__gte=timezone.now() - timedelta(hours=1)
+            ).exists()
+            
+            if not recent_alert:
+                SystemAlert.objects.create(
+                    title=f"Dispositivo Conectado: {device.device_id}",
+                    message=f"El controlador {device.name} ha restablecido la comunicación con la nube exitosamente.",
+                    severity=SystemAlert.Severity.INFO
+                )
 
             print(f"📡 [WOKWI] Datos procesados exitosamente en Railway.")
             return Response({"success": True, "message": "Datos integrados correctamente"})

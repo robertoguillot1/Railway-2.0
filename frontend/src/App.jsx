@@ -11,6 +11,7 @@ import Dashboard from './pages/Dashboard';
 import ZonesPage from './pages/ZonesPage';
 import DevicesPage from './pages/DevicesPage';
 import AlertsPage from './pages/AlertsPage';
+import AnalyticsPage from './pages/AnalyticsPage';
 import SettingsPage from './pages/SettingsPage';
 
 function PageContent() {
@@ -22,12 +23,7 @@ function PageContent() {
     zones: <ZonesPage />,
     devices: <DevicesPage />,
     alerts: <AlertsPage />,
-    analytics: (
-      <div style={{ padding: 20 }}>
-        <h1 style={{ fontFamily: 'Outfit', fontWeight: 700, fontSize: '1.4rem', marginBottom: 12 }}>Analítica Avanzada</h1>
-        <p style={{ color: 'var(--text-dim)' }}>Consulta el historial completo de lecturas de sensores en el Dashboard.</p>
-      </div>
-    ),
+    analytics: <AnalyticsPage />,
     settings: <SettingsPage />,
   };
 

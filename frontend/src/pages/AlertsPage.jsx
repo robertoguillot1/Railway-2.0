@@ -79,22 +79,22 @@ function AlertCard({ alert, onAcknowledge }) {
 
 export default function AlertsPage() {
   const { alerts, setAlerts, connectionMode, addLog } = useApp();
-  const displayAlerts = alerts.length > 0 ? alerts : MOCK_ALERTS;
 
   const handleAcknowledge = async (id) => {
     if (connectionMode === 'cloud') {
       try {
         await acknowledgeAlert(id);
-        addLog(`✅ ALERTA #${id} marcada como revisada en la nube.`);
+        addLog(`✅ NUBE: Alerta revisada exitosamente.`);
       } catch {
-        addLog(`❌ ERROR: No se pudo actualizar la alerta #${id}.`);
+        addLog(`❌ ERROR: No se pudo marcar la alerta como revisada.`);
       }
-    } else {
-      addLog(`✅ DEMO: Alerta #${id} marcada como revisada.`);
     }
+    // Actualizar estado local/global
     setAlerts(prev => prev.map(a => a.id === id ? { ...a, acknowledged: true } : a));
   };
 
+  // Si no hay alertas reales, mostrar mocks para que no se vea vacío
+  const displayAlerts = alerts.length > 0 ? alerts : MOCK_ALERTS;
   const unread = displayAlerts.filter(a => !a.acknowledged).length;
 
   return (
