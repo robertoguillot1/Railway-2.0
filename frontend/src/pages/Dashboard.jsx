@@ -12,22 +12,18 @@ export default function Dashboard() {
     <>
       {/* MAIN DASHBOARD LAYOUT */}
       <div className="dashboard-grid">
-        {/* Left Column: Telemetry & Control */}
-        <div className="side-column">
+        {/* Left Sidebar Column: Telemetry & Control */}
+        <aside className="side-column">
           <TelemetryPanel />
           <ControlPanel />
-        </div>
+        </aside>
 
-        {/* Center/Right Column: 3D Scene & Analytics */}
-        <div className="main-column">
+        {/* Center Main Column: 3D Scene -> Analytics -> Terminal */}
+        <main className="main-column">
           <Scene3D />
           <AnalyticsPanel />
-        </div>
-      </div>
-
-      {/* BOTTOM ROW: Terminal */}
-      <div className="terminal-row">
-        <TerminalPanel />
+          <TerminalPanel />
+        </main>
       </div>
     </>
   );

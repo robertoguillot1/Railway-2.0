@@ -375,7 +375,7 @@ body {
 /* ---- DASHBOARD GRID ---- */
 .dashboard-grid {
   display: grid;
-  grid-template-columns: 340px 1fr;
+  grid-template-columns: 320px 1fr;
   gap: 20px;
   align-items: start;
 }
@@ -392,18 +392,17 @@ body {
   gap: 20px;
 }
 
-.terminal-row {
-  width: 100%;
-  height: 200px;
-}
-
-/* Height for 3D Scene */
+/* Specific heights for panels in main column */
 #scene-container {
-  height: 600px !important;
+  height: 550px !important;
 }
 
 #analytics-container {
-  height: 350px;
+  height: 320px;
+}
+
+#terminal-container {
+  height: 180px;
 }
 
 .mode-toggles { display: flex; gap: 10px; }

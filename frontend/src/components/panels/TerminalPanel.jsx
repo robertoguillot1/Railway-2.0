@@ -23,7 +23,7 @@ export default function TerminalPanel() {
   };
 
   return (
-    <div className="glass-panel" style={{ height: '100%', overflow: 'hidden' }}>
+    <div id="terminal-container" className="glass-panel" style={{ height: '100%', overflow: 'hidden' }}>
       <div style={{ padding: '12px 16px 0', display: 'flex', alignItems: 'center', gap: 8 }}>
         <div style={{ display: 'flex', gap: 5 }}>
           <div style={{ width: 10, height: 10, borderRadius: '50%', background: '#ef4444' }} />
