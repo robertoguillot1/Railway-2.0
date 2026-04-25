@@ -132,6 +132,8 @@ export function AppProvider({ children }) {
     }
   }, [connectionMode, addLog]);
 
+  const lastReadingIdRef = useRef(null);
+
   // ─── Polling de datos en nube ─────────────────────────────────────────────────
   // SOLUCIÓN DEFINITIVA: Usar ref en lugar de closure para leer el deviceId actual.
   // Esto evita que el polling use un valor "congelado" del selectedDeviceId.
@@ -153,10 +155,16 @@ export function AppProvider({ children }) {
 
         // ─── Procesar lecturas de sensores ───────────────────────────────────
         if (readings.status === 'fulfilled' && readings.value?.length) {
+          const allReadings = readings.value;
+          
+          // Detectar si hay datos nuevos comparando el ID de la lectura más reciente
+          const newestId = allReadings[0]?.id;
+          const isNewData = newestId !== lastReadingIdRef.current;
+          lastReadingIdRef.current = newestId;
+
           const byType = {};
 
           // Filtrar SOLO las lecturas del dispositivo seleccionado
-          const allReadings = readings.value;
           const relevantReadings = currentDeviceId
             ? allReadings.filter(r => r.device_id === currentDeviceId)
             : allReadings;
@@ -174,9 +182,14 @@ export function AppProvider({ children }) {
             }
           });
 
-          console.log('[HYDRO] DeviceId:', currentDeviceId, '| Lecturas filtradas:', relevantReadings.length, '| byType:', byType);
-
           if (Object.keys(byType).length > 0) {
+            // Log para la terminal (Solo si hay datos nuevos para evitar spam)
+            if (isNewData) {
+              const temp = byType.air_temp || byType.water_temp || 0;
+              const humS = byType.soil_moisture || 0;
+              addLog(`📊 NUBE: Lectura recibida → T:${temp.toFixed(1)}°C | H.Suelo:${Math.round(humS)}%`);
+            }
+
             setTelemetry(prev => ({
               ...prev,
               humidity: byType.soil_moisture ?? prev.humidity,
