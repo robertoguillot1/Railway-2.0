@@ -13,6 +13,7 @@ const NAV_ITEMS = [
 
 const ADMIN_ITEMS = [
   { id: 'users', icon: 'fa-users-cog', label: 'Usuarios' },
+  { id: 'rbac', icon: 'fa-shield-alt', label: 'Roles y Permisos' },
 ];
 
 export default function Sidebar() {

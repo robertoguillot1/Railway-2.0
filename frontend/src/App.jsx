@@ -16,6 +16,7 @@ import AlertsPage from './pages/AlertsPage';
 import AnalyticsPage from './pages/AnalyticsPage';
 import SettingsPage from './pages/SettingsPage';
 import UsersPage from './pages/UsersPage';
+import RbacPage from './pages/RbacPage';
 
 function PageContent() {
   const { activePage } = useApp();
@@ -29,8 +30,10 @@ function PageContent() {
     alerts: <AlertsPage />,
     analytics: <AnalyticsPage />,
     settings: <SettingsPage />,
-    // Solo admins
-    ...(isAdmin && { users: <UsersPage /> }),
+    ...(isAdmin && { 
+      users: <UsersPage />,
+      rbac: <RbacPage />,
+    }),
   };
 
   return pages[activePage] || pages.dashboard;
