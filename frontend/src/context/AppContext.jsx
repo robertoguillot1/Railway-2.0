@@ -136,10 +136,16 @@ export function AppProvider({ children }) {
 
         if (readings.status === 'fulfilled' && readings.value?.length) {
           const byType = {};
-          readings.value.forEach(r => {
-            const type = r.sensor_type?.toLowerCase() || r.sensor?.sensor_type?.toLowerCase();
+          // Filtrar por el dispositivo seleccionado
+          const relevantReadings = selectedDeviceId 
+            ? readings.value.filter(r => r.device_id === selectedDeviceId)
+            : readings.value;
+
+          relevantReadings.forEach(r => {
+            const type = r.sensor_type?.toLowerCase();
             byType[type] = parseFloat(r.value);
           });
+
           setTelemetry(prev => ({
             ...prev,
             temperature: byType.air_temp ?? byType.water_temp ?? prev.temperature,
@@ -149,15 +155,23 @@ export function AppProvider({ children }) {
             waterLevel: byType.water_level ?? prev.waterLevel,
             signal: 90 + Math.floor(Math.random() * 8),
           }));
-          setSensorHistory(prev => ({
-            humidity: [...prev.humidity.slice(1), byType.humidity ?? prev.humidity.at(-1)],
-            temperature: [...prev.temperature.slice(1), byType.air_temp ?? prev.temperature.at(-1)],
-            ph: [...prev.ph.slice(1), byType.ph ?? prev.ph.at(-1)],
-            ec: [...prev.ec.slice(1), byType.ec ?? prev.ec.at(-1)],
-          }));
+          
+          if (relevantReadings.length > 0) {
+            setSensorHistory(prev => ({
+              humidity: [...prev.humidity.slice(1), byType.humidity ?? prev.humidity.at(-1)],
+              temperature: [...prev.temperature.slice(1), byType.air_temp ?? prev.temperature.at(-1)],
+              ph: [...prev.ph.slice(1), byType.ph ?? prev.ph.at(-1)],
+              ec: [...prev.ec.slice(1), byType.ec ?? prev.ec.at(-1)],
+            }));
+          }
         }
 
-        if (acts.status === 'fulfilled') setActuators(acts.value);
+        if (acts.status === 'fulfilled') {
+          const relevantActs = selectedDeviceId 
+            ? acts.value.filter(a => a.device === selectedDeviceId)
+            : acts.value;
+          setActuators(relevantActs);
+        }
         if (alts.status === 'fulfilled') setAlerts(alts.value);
         if (evts.status === 'fulfilled') setEvents(evts.value);
         if (farms.status === 'fulfilled') setFarms(farms.value);
@@ -168,13 +182,14 @@ export function AppProvider({ children }) {
             setSelectedDeviceId(devs.value[0].id);
           }
         }
-      } catch {
-        addLog('⚠️ ALERTA: Error al obtener datos de la nube.');
+      } catch (err) {
+        console.error(err);
+        addLog('⚠️ ALERTA: Error al procesar datos de la nube.');
       }
     };
     await poll();
     pollingRef.current = setInterval(poll, 5000);
-  }, [addLog]);
+  }, [addLog, selectedDeviceId]);
 
   const stopCloudPolling = useCallback(() => {
     if (pollingRef.current) clearInterval(pollingRef.current);

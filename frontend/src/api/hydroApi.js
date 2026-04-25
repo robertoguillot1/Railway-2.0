@@ -30,7 +30,7 @@ export const getActuatorHistory = () => apiFetch('/api/v1/devices/history/');
 export const getSensorReadings = (sensorId, limit = 50) =>
   apiFetch(`/api/v1/automation/readings/?sensor=${sensorId || ''}&limit=${limit}`);
 export const getLatestReadings = () =>
-  apiFetch('/api/v1/automation/readings/?ordering=-timestamp&limit=20');
+  apiFetch('/api/v1/automation/readings/?ordering=-timestamp&limit=50');
 export const getSystemEvents = () =>
   apiFetch('/api/v1/automation/events/?ordering=-start_time&limit=30');
 export const getSystemAlerts = () =>
