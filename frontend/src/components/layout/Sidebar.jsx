@@ -1,0 +1,93 @@
+// src/components/layout/Sidebar.jsx
+import { useApp } from '../../context/AppContext';
+
+const NAV_ITEMS = [
+  { id: 'dashboard', icon: 'fa-th-large', label: 'Dashboard' },
+  { id: 'zones', icon: 'fa-layer-group', label: 'Zonas' },
+  { id: 'devices', icon: 'fa-microchip', label: 'Dispositivos' },
+  { id: 'analytics', icon: 'fa-chart-line', label: 'Analítica' },
+  { id: 'alerts', icon: 'fa-bell', label: 'Alertas' },
+  { id: 'settings', icon: 'fa-cog', label: 'Ajustes' },
+];
+
+export default function Sidebar() {
+  const { activePage, setActivePage, setIaModalOpen, alerts } = useApp();
+  const unread = alerts?.filter(a => !a.acknowledged)?.length || 0;
+
+  return (
+    <aside style={{
+      position: 'fixed',
+      left: 0, top: 'var(--header-h)', bottom: 0,
+      width: 'var(--sidebar-w)',
+      background: '#0d1424',
+      borderRight: '1px solid var(--panel-border)',
+      display: 'flex', flexDirection: 'column', alignItems: 'center',
+      paddingTop: 20, zIndex: 900,
+    }}>
+      {NAV_ITEMS.map(item => (
+        <button
+          key={item.id}
+          id={`nav-${item.id}`}
+          title={item.label}
+          onClick={() => setActivePage(item.id)}
+          style={{
+            width: 46, height: 46,
+            borderRadius: 13,
+            display: 'flex', justifyContent: 'center', alignItems: 'center',
+            marginBottom: 14,
+            border: 'none',
+            cursor: 'pointer',
+            position: 'relative',
+            fontSize: 18,
+            background: activePage === item.id
+              ? 'linear-gradient(135deg, var(--primary), #059669)'
+              : 'transparent',
+            color: activePage === item.id ? 'white' : 'var(--text-dim)',
+            boxShadow: activePage === item.id ? '0 4px 14px var(--primary-glow)' : 'none',
+            transition: 'all 0.25s ease',
+          }}
+          onMouseEnter={e => {
+            if (activePage !== item.id) e.currentTarget.style.background = 'rgba(255,255,255,0.06)';
+            if (activePage !== item.id) e.currentTarget.style.color = 'white';
+          }}
+          onMouseLeave={e => {
+            if (activePage !== item.id) e.currentTarget.style.background = 'transparent';
+            if (activePage !== item.id) e.currentTarget.style.color = 'var(--text-dim)';
+          }}
+        >
+          <i className={`fas ${item.icon}`} />
+          {item.id === 'alerts' && unread > 0 && (
+            <span style={{
+              position: 'absolute', top: 6, right: 6,
+              width: 8, height: 8,
+              background: 'var(--accent-red)',
+              borderRadius: '50%',
+              boxShadow: '0 0 6px var(--accent-red)',
+            }} />
+          )}
+        </button>
+      ))}
+
+      {/* AI Button */}
+      <button
+        id="nav-ia"
+        title="Agro-Asistente IA"
+        onClick={() => setIaModalOpen(true)}
+        style={{
+          marginTop: 'auto', marginBottom: 20,
+          width: 46, height: 46, borderRadius: 13,
+          border: '1px solid rgba(139,92,246,0.5)',
+          background: 'rgba(139,92,246,0.2)',
+          color: '#c4b5fd',
+          display: 'flex', justifyContent: 'center', alignItems: 'center',
+          cursor: 'pointer', fontSize: 18,
+          transition: 'all 0.25s',
+        }}
+        onMouseEnter={e => { e.currentTarget.style.background = 'rgba(139,92,246,0.4)'; }}
+        onMouseLeave={e => { e.currentTarget.style.background = 'rgba(139,92,246,0.2)'; }}
+      >
+        <i className="fas fa-robot" />
+      </button>
+    </aside>
+  );
+}
