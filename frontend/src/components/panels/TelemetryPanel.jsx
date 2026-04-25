@@ -65,7 +65,7 @@ export default function TelemetryPanel() {
           icon="fa-thermometer-half"
           iconBg="rgba(245,158,11,0.12)"
           iconColor="#f59e0b"
-          label="Temperatura Agua"
+          label="Temperatura Ambiente"
           value={`${temperature.toFixed(1)}°C`}
           valueColor={tempStatus.color}
           extra={<span className={`badge ${temperature > 30 ? 'badge-danger' : temperature < 15 ? 'badge-purple' : 'badge-ok'}`}>{tempStatus.label}</span>}

@@ -19,12 +19,12 @@ export function AppProvider({ children }) {
 
   // ─── Datos de telemetría ────────────────────────────────────────────────────
   const [telemetry, setTelemetry] = useState({
-    humidity: 87,
-    temperature: 24.5,
-    airHumidity: 60,
-    ph: 6.5,
-    ec: 1.8,
-    waterLevel: 75,
+    humidity: 0,
+    temperature: 0,
+    airHumidity: 0,
+    ph: 0,
+    ec: 0,
+    waterLevel: 0,
     pumpState: false,
     signal: 0,
   });
@@ -48,8 +48,12 @@ export function AppProvider({ children }) {
     return saved ? Number(saved) : null;
   });
 
+  // ── Ref que siempre apunta al deviceId actual (evita el closure bug) ─────────
+  const selectedDeviceIdRef = useRef(selectedDeviceId);
+
   const handleSetSelectedDevice = useCallback((id) => {
     setSelectedDeviceId(id);
+    selectedDeviceIdRef.current = id;
     if (id) localStorage.setItem('hydro_selected_device', id.toString());
   }, []);
 
@@ -68,10 +72,10 @@ export function AppProvider({ children }) {
 
   // ─── Historial de sensores ──────────────────────────────────────────────────
   const [sensorHistory, setSensorHistory] = useState({
-    humidity: Array(30).fill(87),
-    temperature: Array(30).fill(24.5),
-    ph: Array(30).fill(6.5),
-    ec: Array(30).fill(1.8),
+    humidity: Array(30).fill(0),
+    temperature: Array(30).fill(0),
+    ph: Array(30).fill(0),
+    ec: Array(30).fill(0),
   });
 
   // ─── Navegación ─────────────────────────────────────────────────────────────
@@ -94,7 +98,7 @@ export function AppProvider({ children }) {
       }, 3000);
     } else {
       if (simRef.current) clearInterval(simRef.current);
-      // Reiniciar a 0 si entramos en modo nube pero no hay datos
+      // Reiniciar a 0 si entramos en modo nube
       setTelemetry({
         humidity: 0, temperature: 0, airHumidity: 0, ph: 0, ec: 0, waterLevel: 0, pumpState: false, signal: 0
       });
@@ -128,11 +132,16 @@ export function AppProvider({ children }) {
     }
   }, [connectionMode, addLog]);
 
-  // ─── Polling de datos en nube ────────────────────────────────────────────────
+  // ─── Polling de datos en nube ─────────────────────────────────────────────────
+  // SOLUCIÓN DEFINITIVA: Usar ref en lugar de closure para leer el deviceId actual.
+  // Esto evita que el polling use un valor "congelado" del selectedDeviceId.
   const startCloudPolling = useCallback(async () => {
     const poll = async () => {
       try {
-        const [readings, acts, alts, evts, farms, zones, devs] = await Promise.allSettled([
+        // Leer el deviceId ACTUAL desde el ref (no desde closure)
+        const currentDeviceId = selectedDeviceIdRef.current;
+
+        const [readings, acts, alts, evts, farmsRes, zonesRes, devs] = await Promise.allSettled([
           getLatestReadings(),
           getActuators(),
           getSystemAlerts(),
@@ -142,64 +151,90 @@ export function AppProvider({ children }) {
           getDevices(),
         ]);
 
+        // ─── Procesar lecturas de sensores ───────────────────────────────────
         if (readings.status === 'fulfilled' && readings.value?.length) {
           const byType = {};
-          // Filtrar por el dispositivo seleccionado
-          const relevantReadings = selectedDeviceId 
-            ? readings.value.filter(r => r.device_id === selectedDeviceId)
-            : readings.value;
 
-          relevantReadings.forEach(r => {
+          // Filtrar SOLO las lecturas del dispositivo seleccionado
+          const allReadings = readings.value;
+          const relevantReadings = currentDeviceId
+            ? allReadings.filter(r => r.device_id === currentDeviceId)
+            : allReadings;
+
+          // Ordenar por timestamp descendente y tomar el más reciente de cada tipo
+          const sorted = [...relevantReadings].sort((a, b) =>
+            new Date(b.timestamp) - new Date(a.timestamp)
+          );
+
+          // Solo el valor más reciente por tipo de sensor
+          sorted.forEach(r => {
             const type = r.sensor_type?.toLowerCase();
-            byType[type] = parseFloat(r.value);
+            if (type && byType[type] === undefined) {
+              byType[type] = parseFloat(r.value);
+            }
           });
 
-          setTelemetry(prev => ({
-            ...prev,
-            humidity: byType.soil_moisture ?? prev.humidity, // El anillo grande es Humedad de Suelo
-            temperature: byType.air_temp ?? byType.water_temp ?? prev.temperature,
-            airHumidity: byType.humidity ?? prev.airHumidity,
-            ph: byType.ph ?? prev.ph,
-            ec: byType.ec ?? prev.ec,
-            waterLevel: byType.water_level ?? prev.waterLevel,
-            signal: 90 + Math.floor(Math.random() * 8),
-          }));
-          
-          if (relevantReadings.length > 0) {
+          console.log('[HYDRO] DeviceId:', currentDeviceId, '| Lecturas filtradas:', relevantReadings.length, '| byType:', byType);
+
+          if (Object.keys(byType).length > 0) {
+            setTelemetry(prev => ({
+              ...prev,
+              humidity: byType.soil_moisture ?? prev.humidity,
+              temperature: byType.air_temp ?? byType.water_temp ?? prev.temperature,
+              airHumidity: byType.humidity ?? prev.airHumidity,
+              ph: byType.ph ?? prev.ph,
+              ec: byType.ec ?? prev.ec,
+              waterLevel: byType.water_level ?? prev.waterLevel,
+              signal: 90 + Math.floor(Math.random() * 8),
+            }));
+
             setSensorHistory(prev => ({
-              humidity: [...prev.humidity.slice(1), byType.soil_moisture ?? prev.humidity.at(-1)],
-              temperature: [...prev.temperature.slice(1), byType.air_temp ?? prev.temperature.at(-1)],
-              ph: [...prev.ph.slice(1), byType.ph ?? prev.ph.at(-1)],
-              ec: [...prev.ec.slice(1), byType.ec ?? prev.ec.at(-1)],
+              humidity: [...prev.humidity.slice(1), byType.soil_moisture ?? prev.humidity.at(-1) ?? 0],
+              temperature: [...prev.temperature.slice(1), byType.air_temp ?? prev.temperature.at(-1) ?? 0],
+              ph: [...prev.ph.slice(1), byType.ph ?? prev.ph.at(-1) ?? 0],
+              ec: [...prev.ec.slice(1), byType.ec ?? prev.ec.at(-1) ?? 0],
             }));
           }
         }
 
+        // ─── Procesar actuadores ─────────────────────────────────────────────
         if (acts.status === 'fulfilled') {
-          const relevantActs = selectedDeviceId 
-            ? acts.value.filter(a => a.device === selectedDeviceId)
+          const relevantActs = currentDeviceId
+            ? acts.value.filter(a => a.device === currentDeviceId)
             : acts.value;
           setActuators(relevantActs);
+
+          // Sincronizar estado real de la bomba
+          const pump = relevantActs.find(a =>
+            a.actuator_type === 'PUMP' || a.name?.toLowerCase().includes('bomba')
+          );
+          if (pump !== undefined) {
+            setTelemetry(prev => ({ ...prev, pumpState: pump.state }));
+          }
         }
+
         if (alts.status === 'fulfilled') setAlerts(alts.value);
         if (evts.status === 'fulfilled') setEvents(evts.value);
-        if (farms.status === 'fulfilled') setFarms(farms.value);
-        if (zones.status === 'fulfilled') setZones(zones.value);
+        if (farmsRes.status === 'fulfilled') setFarms(farmsRes.value);
+        if (zonesRes.status === 'fulfilled') setZones(zonesRes.value);
         if (devs.status === 'fulfilled') {
           setDevices(devs.value);
-          // Solo auto-seleccionar si no hay nada seleccionado Y es la primera vez
-          if (selectedDeviceId === null && devs.value.length > 0) {
+          // Auto-seleccionar solo si no hay nada seleccionado aún
+          if (selectedDeviceIdRef.current === null && devs.value.length > 0) {
             handleSetSelectedDevice(devs.value[0].id);
           }
         }
       } catch (err) {
-        console.error(err);
+        console.error('[HYDRO] Error en polling:', err);
         addLog('⚠️ ALERTA: Error al procesar datos de la nube.');
       }
     };
+
+    // Primera llamada inmediata
     await poll();
-    pollingRef.current = setInterval(poll, 3000); // Actualización más rápida (3 seg)
-  }, [addLog, selectedDeviceId]);
+    // Polling continuo cada 3 segundos
+    pollingRef.current = setInterval(poll, 3000);
+  }, [addLog, handleSetSelectedDevice]); // ← ya NO depende de selectedDeviceId
 
   const stopCloudPolling = useCallback(() => {
     if (pollingRef.current) clearInterval(pollingRef.current);
