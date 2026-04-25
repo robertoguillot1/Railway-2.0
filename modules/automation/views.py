@@ -55,40 +55,56 @@ class LegacyTelemetriaView(APIView):
         try:
             payload = request.data
             
-            # 1. Identificar el dispositivo (usaremos el primero por defecto para la simulación)
-            device = Device.objects.first()
-            if not device:
-                return Response({"error": "No hay dispositivos configurados"}, status=400)
+            # 1. Obtener o crear dispositivo por defecto para Wokwi
+            device, _ = Device.objects.get_or_create(
+                name="ESP32 Wokwi",
+                defaults={"device_type": "ESP32", "status": "ONLINE"}
+            )
 
             # 2. Guardar Lectura de Temperatura
-            temp_sensor = Sensor.objects.filter(device=device, sensor_type=Sensor.SensorType.TEMPERATURE).first()
-            if temp_sensor:
-                SensorReading.objects.create(sensor=temp_sensor, value=payload.get('temperatura', 0))
+            if 'temperatura' in payload:
+                sensor, _ = Sensor.objects.get_or_create(
+                    device=device,
+                    sensor_type=Sensor.SensorType.TEMPERATURE,
+                    defaults={"name": "Temperatura", "unit": "°C"}
+                )
+                SensorReading.objects.create(sensor=sensor, value=payload.get('temperatura'))
 
             # 3. Guardar Lectura de Humedad Ambiente
-            hum_sensor = Sensor.objects.filter(device=device, sensor_type=Sensor.SensorType.HUMIDITY, name__icontains="Ambiente").first()
-            if not hum_sensor:
-                hum_sensor = Sensor.objects.filter(device=device, sensor_type=Sensor.SensorType.HUMIDITY).first()
-            
-            if hum_sensor:
-                SensorReading.objects.create(sensor=hum_sensor, value=payload.get('humedad_ambiente', 0))
+            if 'humedad_ambiente' in payload:
+                sensor, _ = Sensor.objects.get_or_create(
+                    device=device,
+                    sensor_type=Sensor.SensorType.HUMIDITY,
+                    name="Humedad Ambiente",
+                    defaults={"unit": "%"}
+                )
+                SensorReading.objects.create(sensor=sensor, value=payload.get('humedad_ambiente'))
 
             # 4. Guardar Lectura de Humedad Suelo (Sustrato)
-            soil_sensor = Sensor.objects.filter(device=device, name__icontains="Sustrato").first()
-            if soil_sensor:
-                SensorReading.objects.create(sensor=soil_sensor, value=payload.get('humedad_suelo', 0))
+            if 'humedad_suelo' in payload:
+                sensor, _ = Sensor.objects.get_or_create(
+                    device=device,
+                    name="Humedad Sustrato",
+                    defaults={"sensor_type": Sensor.SensorType.HUMIDITY, "unit": "%"}
+                )
+                SensorReading.objects.create(sensor=sensor, value=payload.get('humedad_suelo'))
 
             # 5. Actualizar Estado de la Bomba
-            pump = Actuator.objects.filter(device=device, actuator_type=Actuator.ActuatorType.PUMP).first()
-            if pump:
+            if 'bomba' in payload:
+                pump, _ = Actuator.objects.get_or_create(
+                    device=device,
+                    actuator_type=Actuator.ActuatorType.PUMP,
+                    defaults={"name": "Bomba de Agua"}
+                )
                 new_state = payload.get('bomba', False)
                 if pump.state != new_state:
                     pump.state = new_state
                     pump.save()
 
-            print(f"📡 [WOKWI] Datos procesados para el dispositivo: {device.name}")
-            return Response({"success": True, "message": "Datos integrados en el sistema modular 2.0"})
+            print(f"📡 [WOKWI] Datos procesados exitosamente.")
+            return Response({"success": True, "message": "Datos integrados correctamente"})
         except Exception as e:
+            print(f"❌ Error en Telemetria: {str(e)}")
             return Response({"error": str(e)}, status=400)
 
     def get(self, request):
