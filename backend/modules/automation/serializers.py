@@ -13,3 +13,8 @@ class SystemEventSerializer(serializers.ModelSerializer):
     class Meta:
         model = SystemEvent
         fields = '__all__'
+
+class SystemAlertSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = SystemAlert
+        fields = '__all__'

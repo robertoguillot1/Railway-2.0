@@ -98,8 +98,14 @@ STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
 CSRF_TRUSTED_ORIGINS = [
-    'https://railway-20-production-7eaa.up.railway.app'
+    'https://railway-20-production-7eaa.up.railway.app',
+    'http://railway-20-production-7eaa.up.railway.app',
+    'https://*.up.railway.app'
 ]
+
+# Asegurar que WhiteNoise sirva archivos en todas las condiciones
+WHITENOISE_USE_FINDERS = True
+WHITENOISE_AUTOREFRESH = True
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 

@@ -6,6 +6,11 @@ class CropTypeSerializer(serializers.ModelSerializer):
         model = CropType
         fields = '__all__'
 
+class FarmSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Farm
+        fields = '__all__'
+
 class ZoneSerializer(serializers.ModelSerializer):
     crop_type_name = serializers.CharField(source='crop_type.name', read_only=True)
     estimated_harvest_date = serializers.ReadOnlyField()
