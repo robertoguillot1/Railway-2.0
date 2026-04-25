@@ -87,7 +87,7 @@ class LegacyTelemetriaView(APIView):
                 sensor, _ = Sensor.objects.get_or_create(
                     device=device,
                     name="Humedad Sustrato",
-                    defaults={"sensor_type": Sensor.SensorType.HUMIDITY, "unit": "%"}
+                    defaults={"sensor_type": Sensor.SensorType.SOIL_MOISTURE, "unit": "%"}
                 )
                 SensorReading.objects.create(sensor=sensor, value=payload.get('humedad_suelo'))
 

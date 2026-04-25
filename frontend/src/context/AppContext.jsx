@@ -148,6 +148,7 @@ export function AppProvider({ children }) {
 
           setTelemetry(prev => ({
             ...prev,
+            humidity: byType.soil_moisture ?? prev.humidity, // El anillo grande es Humedad de Suelo
             temperature: byType.air_temp ?? byType.water_temp ?? prev.temperature,
             airHumidity: byType.humidity ?? prev.airHumidity,
             ph: byType.ph ?? prev.ph,
@@ -158,7 +159,7 @@ export function AppProvider({ children }) {
           
           if (relevantReadings.length > 0) {
             setSensorHistory(prev => ({
-              humidity: [...prev.humidity.slice(1), byType.humidity ?? prev.humidity.at(-1)],
+              humidity: [...prev.humidity.slice(1), byType.soil_moisture ?? prev.humidity.at(-1)],
               temperature: [...prev.temperature.slice(1), byType.air_temp ?? prev.temperature.at(-1)],
               ph: [...prev.ph.slice(1), byType.ph ?? prev.ph.at(-1)],
               ec: [...prev.ec.slice(1), byType.ec ?? prev.ec.at(-1)],
@@ -178,7 +179,8 @@ export function AppProvider({ children }) {
         if (zones.status === 'fulfilled') setZones(zones.value);
         if (devs.status === 'fulfilled') {
           setDevices(devs.value);
-          if (!selectedDeviceId && devs.value.length > 0) {
+          // Solo auto-seleccionar si no hay nada seleccionado Y es la primera vez (devices estaba vacío)
+          if (selectedDeviceId === null && devs.value.length > 0) {
             setSelectedDeviceId(devs.value[0].id);
           }
         }
@@ -188,7 +190,7 @@ export function AppProvider({ children }) {
       }
     };
     await poll();
-    pollingRef.current = setInterval(poll, 5000);
+    pollingRef.current = setInterval(poll, 3000); // Actualización más rápida (3 seg)
   }, [addLog, selectedDeviceId]);
 
   const stopCloudPolling = useCallback(() => {

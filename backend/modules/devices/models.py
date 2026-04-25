@@ -25,6 +25,7 @@ class Sensor(TimeStampedModel):
         WATER_TEMP = "WATER_TEMP", _("Temperatura del Agua")
         AIR_TEMP = "AIR_TEMP", _("Temperatura Ambiental")
         HUMIDITY = "HUMIDITY", _("Humedad Ambiental")
+        SOIL_MOISTURE = "SOIL_MOISTURE", _("Humedad de Suelo/Sustrato")
         WATER_LEVEL = "WATER_LEVEL", _("Nivel de Tanque")
 
     device = models.ForeignKey(Device, on_delete=models.CASCADE, related_name="sensors")
