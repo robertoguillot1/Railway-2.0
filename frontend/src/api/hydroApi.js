@@ -13,6 +13,7 @@ async function apiFetch(path, options = {}) {
 }
 
 // ─── FARMS ────────────────────────────────────────────────────────────────────
+export const getFarms = () => apiFetch('/api/v1/farms/farms/').catch(() => []);
 export const getZones = (farmId) =>
   apiFetch(farmId ? `/api/v1/farms/zones/?farm=${farmId}` : '/api/v1/farms/zones/');
 export const getCropTypes = () => apiFetch('/api/v1/farms/crops/');
@@ -32,6 +33,8 @@ export const getLatestReadings = () =>
   apiFetch('/api/v1/automation/readings/?ordering=-timestamp&limit=20');
 export const getSystemEvents = () =>
   apiFetch('/api/v1/automation/events/?ordering=-start_time&limit=30');
+export const getSystemAlerts = () =>
+  apiFetch('/api/v1/automation/alerts/').catch(() => []);
 export const acknowledgeAlert = (id) =>
   apiFetch(`/api/v1/automation/alerts/${id}/`, {
     method: 'PATCH',
