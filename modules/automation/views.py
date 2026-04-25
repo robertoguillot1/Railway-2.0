@@ -56,17 +56,18 @@ class LegacyTelemetriaView(APIView):
             payload = request.data
             
             # 1. Obtener o crear dispositivo por defecto para Wokwi
+            # Usamos device_id="WOKWI-001" y name="ESP32 Wokwi"
             device, _ = Device.objects.get_or_create(
-                name="ESP32 Wokwi",
-                defaults={"device_type": "ESP32", "status": "ONLINE"}
+                device_id="WOKWI-001",
+                defaults={"name": "ESP32 Wokwi", "active": True}
             )
 
             # 2. Guardar Lectura de Temperatura
             if 'temperatura' in payload:
                 sensor, _ = Sensor.objects.get_or_create(
                     device=device,
-                    sensor_type=Sensor.SensorType.TEMPERATURE,
-                    defaults={"name": "Temperatura", "unit": "°C"}
+                    sensor_type=Sensor.SensorType.AIR_TEMP,
+                    defaults={"name": "Temperatura Ambiente", "unit": "°C"}
                 )
                 SensorReading.objects.create(sensor=sensor, value=payload.get('temperatura'))
 
@@ -82,6 +83,7 @@ class LegacyTelemetriaView(APIView):
 
             # 4. Guardar Lectura de Humedad Suelo (Sustrato)
             if 'humedad_suelo' in payload:
+                # Como no tienes tipo SOIL_MOISTURE, usamos HUMIDITY con nombre diferente
                 sensor, _ = Sensor.objects.get_or_create(
                     device=device,
                     name="Humedad Sustrato",
@@ -94,14 +96,14 @@ class LegacyTelemetriaView(APIView):
                 pump, _ = Actuator.objects.get_or_create(
                     device=device,
                     actuator_type=Actuator.ActuatorType.PUMP,
-                    defaults={"name": "Bomba de Agua"}
+                    defaults={"name": "Bomba de Riego"}
                 )
                 new_state = payload.get('bomba', False)
                 if pump.state != new_state:
                     pump.state = new_state
                     pump.save()
 
-            print(f"📡 [WOKWI] Datos procesados exitosamente.")
+            print(f"📡 [WOKWI] Datos procesados exitosamente en Railway.")
             return Response({"success": True, "message": "Datos integrados correctamente"})
         except Exception as e:
             import traceback
