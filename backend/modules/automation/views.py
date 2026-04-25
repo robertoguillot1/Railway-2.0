@@ -10,7 +10,7 @@ import json
 from .models import SensorReading, SystemEvent, SystemAlert
 from django.utils import timezone
 from datetime import timedelta
-from .serializers import SensorReadingSerializer, SystemEventSerializer, SystemAlertSerializer
+from .serializers import SensorReadingSerializer, SystemEventSerializer, SystemAlertSerializer, TelemetriaSerializer
 from modules.devices.models import Device, Sensor, Actuator
 
 class SensorReadingViewSet(viewsets.ModelViewSet):
@@ -55,6 +55,7 @@ class LegacyTelemetriaView(APIView):
     """
     authentication_classes = [] 
     permission_classes = []
+    serializer_class = TelemetriaSerializer
 
     def post(self, request):
         try:
