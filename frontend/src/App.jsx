@@ -7,6 +7,7 @@ import { useApp } from './context/AppContext';
 import { useSimulator } from './hooks/useSimulator';
 import Header from './components/layout/Header';
 import Sidebar from './components/layout/Sidebar';
+import MobileNav from './components/layout/MobileNav';
 import IAModal from './components/ui/IAModal';
 import LoginPage from './pages/LoginPage';
 import Dashboard from './pages/Dashboard';
@@ -71,6 +72,7 @@ function AppShell() {
             <PageContent />
           </main>
         </div>
+        <MobileNav />
         <IAModal />
       </div>
     </AppProvider>

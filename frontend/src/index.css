@@ -66,6 +66,7 @@ body {
   display: flex;
   flex-direction: column;
   gap: 20px;
+  width: 100%;
 }
 
 /* ---- GLASS PANEL ---- */
@@ -568,19 +569,44 @@ body {
 
 @media (max-width: 992px) {
   .dashboard-grid { grid-template-columns: 1fr; }
-  #scene-container { height: 450px !important; }
+  #scene-container { height: 400px !important; }
 }
 
 @media (max-width: 768px) {
-  :root { --sidebar-w: 0px; --header-h: 56px; }
-  .content-area { padding: 15px; padding-bottom: 40px; margin-left: 0; }
+  :root { --sidebar-w: 0px; --header-h: 60px; }
+  
+  body { overflow-y: auto; }
+  .app-layout { height: auto; overflow: visible; }
+  .main-wrapper { overflow: visible; }
+
+  .content-area { 
+    padding: 15px; 
+    padding-bottom: 90px; /* Space for bottom nav */
+    margin-left: 0; 
+  }
+
+  aside { display: none !important; } /* Hide fixed sidebar */
+
   .dashboard-grid { gap: 15px; }
   .glass-panel { border-radius: 14px; }
   .panel-inner { padding: 18px; }
   
-  /* UI adjustments for mobile */
-  .ring-container { width: 120px; height: 120px; }
-  .ring-val { font-size: 24px; }
-  .mini-card-value { font-size: 16px; }
-  #scene-container { height: 350px !important; }
+  /* Mobile Bottom Nav Bar */
+  .mobile-nav {
+    display: flex !important;
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 70px;
+    background: rgba(13, 20, 36, 0.95);
+    backdrop-filter: blur(15px);
+    border-top: 1px solid var(--panel-border);
+    z-index: 2000;
+    justify-content: space-around;
+    align-items: center;
+    padding: 0 10px;
+  }
+
+  #scene-container { height: 300px !important; }
 }
