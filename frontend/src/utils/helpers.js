@@ -11,6 +11,13 @@ export const STAGE_COLORS = {
   HARVEST: '#ef4444',
 };
 
+export const STAGE_DISPLAY = {
+  GERMINATION: { label: 'Germinación', icon: 'fa-seedling', color: '#8b5cf6' },
+  GROWTH: { label: 'Crecimiento', icon: 'fa-leaf', color: '#10b981' },
+  FLOWERING: { label: 'Floración', icon: 'fa-sun', color: '#f59e0b' },
+  HARVEST: { label: 'Cosecha', icon: 'fa-carrot', color: '#ef4444' }
+};
+
 export function formatTime(date = new Date()) {
   return date.toLocaleTimeString('es-ES', { hour12: false });
 }
