@@ -43,7 +43,15 @@ export function AppProvider({ children }) {
 
   // ─── Dispositivos ───────────────────────────────────────────────────────────
   const [devices, setDevices] = useState([]);
-  const [selectedDeviceId, setSelectedDeviceId] = useState(null);
+  const [selectedDeviceId, setSelectedDeviceId] = useState(() => {
+    const saved = localStorage.getItem('hydro_selected_device');
+    return saved ? Number(saved) : null;
+  });
+
+  const handleSetSelectedDevice = useCallback((id) => {
+    setSelectedDeviceId(id);
+    if (id) localStorage.setItem('hydro_selected_device', id.toString());
+  }, []);
 
   // ─── Modos de operación ─────────────────────────────────────────────────────
   const [operationMode, setOperationMode] = useState('AUTO');
@@ -179,9 +187,9 @@ export function AppProvider({ children }) {
         if (zones.status === 'fulfilled') setZones(zones.value);
         if (devs.status === 'fulfilled') {
           setDevices(devs.value);
-          // Solo auto-seleccionar si no hay nada seleccionado Y es la primera vez (devices estaba vacío)
+          // Solo auto-seleccionar si no hay nada seleccionado Y es la primera vez
           if (selectedDeviceId === null && devs.value.length > 0) {
-            setSelectedDeviceId(devs.value[0].id);
+            handleSetSelectedDevice(devs.value[0].id);
           }
         }
       } catch (err) {
@@ -213,7 +221,7 @@ export function AppProvider({ children }) {
     farms, zones, activeZone, setActiveZone,
     cropDay, setCropDay,
     sensorHistory, setSensorHistory,
-    devices, selectedDeviceId, setSelectedDeviceId,
+    devices, selectedDeviceId, setSelectedDeviceId: handleSetSelectedDevice,
     activePage, setActivePage,
     iaModalOpen, setIaModalOpen,
     startCloudPolling, stopCloudPolling,

@@ -169,7 +169,7 @@ export default function ControlPanel() {
           {connectionMode === 'cloud' && (
             <div className="info-box" style={{ marginTop: 10 }}>
               <i className="fas fa-database" style={{ color: 'var(--primary)', marginRight: 6 }} />
-              Conectado a <b>Railway</b>. Datos actualizados cada <b>5 segundos</b>.
+              Conectado a <b>Railway</b>. Datos actualizados cada <b>3 segundos</b>.
             </div>
           )}
         </div>
@@ -181,26 +181,30 @@ export default function ControlPanel() {
               SELECCIONAR DISPOSITIVO (ESP32)
             </div>
             <select
-              className="range-slider"
               style={{
-                width: '100%', padding: '10px', borderRadius: '10px',
-                background: 'rgba(0,0,0,0.3)', color: 'white', border: '1px solid rgba(255,255,255,0.1)',
-                outline: 'none', cursor: 'pointer', appearance: 'none', fontSize: '11px'
+                width: '100%', padding: '12px', borderRadius: '10px',
+                background: 'rgba(255,255,255,0.05)', color: 'white', border: '1px solid rgba(255,255,255,0.1)',
+                outline: 'none', cursor: 'pointer', fontSize: '12px', fontWeight: '600',
+                fontFamily: 'Outfit, sans-serif'
               }}
               value={selectedDeviceId || ''}
               onChange={(e) => {
-                setSelectedDeviceId(Number(e.target.value));
-                addLog(`📱 DISPOSITIVO: Cambiado a ID #${e.target.value}`);
+                const id = e.target.value ? Number(e.target.value) : null;
+                setSelectedDeviceId(id);
+                if (id) addLog(`📱 DISPOSITIVO: Cambiado a ID #${id}`);
               }}
             >
               {devices.length === 0 ? (
-                <option value="">Cargando dispositivos...</option>
+                <option value="" style={{ background: '#1a1d21' }}>Cargando dispositivos...</option>
               ) : (
-                devices.map(dev => (
-                  <option key={dev.id} value={dev.id}>
-                    {dev.name} ({dev.device_id})
-                  </option>
-                ))
+                <>
+                  <option value="" style={{ background: '#1a1d21' }}>-- Seleccionar ESP32 --</option>
+                  {devices.map(dev => (
+                    <option key={dev.id} value={dev.id} style={{ background: '#1a1d21' }}>
+                      {dev.name} ({dev.device_id})
+                    </option>
+                  ))}
+                </>
               )}
             </select>
           </div>
