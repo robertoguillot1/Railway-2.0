@@ -230,7 +230,7 @@ export default function Scene3D() {
   };
 
   return (
-    <div style={{ position: 'relative', borderRadius: 'var(--radius)', overflow: 'hidden', background: '#080d14', border: '1px solid var(--panel-border)' }}>
+    <div id="scene-container" style={{ position: 'relative', borderRadius: 'var(--radius)', overflow: 'hidden', background: '#080d14', border: '1px solid var(--panel-border)' }}>
 
       {/* 3D Canvas */}
       <div

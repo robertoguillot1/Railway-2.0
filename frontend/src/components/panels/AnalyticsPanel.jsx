@@ -45,7 +45,7 @@ export default function AnalyticsPanel() {
   };
 
   return (
-    <div className="glass-panel" style={{ height: '100%' }}>
+    <div id="analytics-container" className="glass-panel" style={{ height: '100%' }}>
       <div style={{ padding: '16px 18px 0', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
         <div className="panel-header" style={{ marginBottom: 0 }}>
           <i className="fas fa-chart-area" />

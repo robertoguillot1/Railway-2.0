@@ -10,16 +10,23 @@ import TerminalPanel from '../components/panels/TerminalPanel';
 export default function Dashboard() {
   return (
     <>
-      {/* TOP ROW: Telemetry | 3D Scene | Control */}
-      <div className="top-grid">
-        <TelemetryPanel />
-        <Scene3D />
-        <ControlPanel />
+      {/* MAIN DASHBOARD LAYOUT */}
+      <div className="dashboard-grid">
+        {/* Left Column: Telemetry & Control */}
+        <div className="side-column">
+          <TelemetryPanel />
+          <ControlPanel />
+        </div>
+
+        {/* Center/Right Column: 3D Scene & Analytics */}
+        <div className="main-column">
+          <Scene3D />
+          <AnalyticsPanel />
+        </div>
       </div>
 
-      {/* BOTTOM ROW: Chart | Terminal */}
-      <div className="bottom-grid">
-        <AnalyticsPanel />
+      {/* BOTTOM ROW: Terminal */}
+      <div className="terminal-row">
         <TerminalPanel />
       </div>
     </>
