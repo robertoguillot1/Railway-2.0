@@ -66,7 +66,7 @@ import os
 
 DATABASES = {
     'default': dj_database_url.config(
-        default=f'mysql://root:123456789@127.0.0.1:3306/hydrosmart_db',
+        default='mysql://root:DamyltLEOGRpirVJWTQaOWeSEKGdUfCC@shuttle.proxy.rlwy.net:45092/railway',
         conn_max_age=600,
     )
 }
