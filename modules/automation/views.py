@@ -104,8 +104,10 @@ class LegacyTelemetriaView(APIView):
             print(f"📡 [WOKWI] Datos procesados exitosamente.")
             return Response({"success": True, "message": "Datos integrados correctamente"})
         except Exception as e:
-            print(f"❌ Error en Telemetria: {str(e)}")
-            return Response({"error": str(e)}, status=400)
+            import traceback
+            error_details = traceback.format_exc()
+            print(f"❌ ERROR CRÍTICO EN TELEMETRÍA:\n{error_details}")
+            return Response({"error": str(e), "details": error_details}, status=400)
 
     def get(self, request):
         """

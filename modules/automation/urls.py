@@ -8,5 +8,6 @@ router.register(r'events', SystemEventViewSet)
 
 urlpatterns = [
     path('', include(router.urls)),
-    path('telemetria', LegacyTelemetriaView.as_view(), name='legacy_telemetria'),
+    path('telemetria/', LegacyTelemetriaView.as_view(), name='legacy_telemetria'),
+    path('telemetria', LegacyTelemetriaView.as_view()), # Soporte sin barra
 ]
