@@ -26,7 +26,7 @@ export default function ControlPanel() {
     setConnecting(true);
     addLog('🌐 RED: Contactando backend en Railway...');
     try {
-      const url = import.meta.env.VITE_API_URL || 'https://railway-riego-production.up.railway.app';
+      const url = import.meta.env.VITE_API_URL || 'https://railway-20-production-7eaa.up.railway.app';
       const res = await fetch(`${url}/api/v1/automation/readings/?limit=1`, { signal: AbortSignal.timeout(6000) });
       if (res.ok) {
         setIsConnected(true);
