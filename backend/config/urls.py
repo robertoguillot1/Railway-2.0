@@ -7,7 +7,10 @@ from rest_framework_simplejwt.views import (
     TokenRefreshView,
 )
 
+from django.views.generic import RedirectView
+
 urlpatterns = [
+    path('', RedirectView.as_view(url='/api/docs/', permanent=False)),
     path('admin/', admin.site.urls),
     
     # Swagger & Documentation
