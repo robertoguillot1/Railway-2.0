@@ -111,7 +111,7 @@ export function AppProvider({ children }) {
 
   // ─── Logger ─────────────────────────────────────────────────────────────────
   const addLog = useCallback((msg) => {
-    setLogs(prev => [...prev.slice(-99), { ts: new Date(), msg }]);
+    setLogs(prev => [...prev.slice(-49), { ts: new Date(), msg }]);
   }, []);
 
   // ─── Toggle actuador en nube ─────────────────────────────────────────────────

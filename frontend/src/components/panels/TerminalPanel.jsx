@@ -34,13 +34,21 @@ export default function TerminalPanel() {
           SYSTEM LOG TERMINAL
         </span>
       </div>
-      <div className="terminal" style={{ height: 'calc(100% - 36px)', margin: '8px 10px 10px' }}>
+      <div className="terminal" style={{ 
+        height: 'calc(100% - 48px)', 
+        margin: '8px 10px 10px',
+        overflowY: 'auto',
+        display: 'flex',
+        flexDirection: 'column',
+        gap: '2px',
+        paddingRight: '5px'
+      }}>
         <div style={{ color: 'rgba(255,255,255,0.15)', marginBottom: 8, fontSize: 9, borderBottom: '1px solid rgba(255,255,255,0.04)', paddingBottom: 6 }}>
           --- HYDROSMART PRO v2.0 — TERMINAL READY ---
         </div>
         {logs.map((log, i) => (
-          <div key={i} className="log-line" style={{ color: getColor(log.msg) }}>
-            <span className="log-ts">[{formatTime(log.ts)}]</span>
+          <div key={i} className="log-line" style={{ color: getColor(log.msg), fontSize: '11px', lineHeight: '1.4' }}>
+            <span className="log-ts" style={{ opacity: 0.5, marginRight: '8px' }}>[{formatTime(log.ts)}]</span>
             {log.msg}
           </div>
         ))}
