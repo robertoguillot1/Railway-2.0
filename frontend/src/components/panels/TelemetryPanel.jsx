@@ -2,7 +2,7 @@
 // Panel izquierdo: Humedad (ring), Temperatura, pH, EC, Nivel de Agua, Estado Bomba
 
 import { useApp } from '../../context/AppContext';
-import { ringOffset, getPHStatus, getECStatus, getTempStatus } from '../../utils/helpers';
+import { ringOffset, getTempStatus } from '../../utils/helpers';
 
 function MiniCard({ icon, iconBg, iconColor, label, value, valueColor, extra }) {
   return (
@@ -28,8 +28,6 @@ export default function TelemetryPanel() {
   const circ = 2 * Math.PI * 58;
   const offset = circ - (circ * Math.min(humidity, 100)) / 100;
 
-  const phStatus = getPHStatus(ph);
-  const ecStatus = getECStatus(ec);
   const tempStatus = getTempStatus(temperature);
 
   const humColor = humidity < 30 ? '#ef4444' : humidity < 60 ? '#f59e0b' : '#10b981';
@@ -78,28 +76,6 @@ export default function TelemetryPanel() {
           iconColor="#818cf8"
           label="Humedad Ambiental"
           value={`${Math.round(airHumidity)}%`}
-        />
-
-        {/* pH */}
-        <MiniCard
-          icon="fa-flask"
-          iconBg="rgba(139,92,246,0.12)"
-          iconColor="#a78bfa"
-          label="pH de la Solución"
-          value={ph.toFixed(2)}
-          valueColor={phStatus.color}
-          extra={<span className={`badge ${phStatus.badge}`}>{phStatus.label}</span>}
-        />
-
-        {/* EC */}
-        <MiniCard
-          icon="fa-bolt"
-          iconBg="rgba(56,189,248,0.12)"
-          iconColor="#38bdf8"
-          label="Conductividad (EC)"
-          value={`${ec.toFixed(2)} mS`}
-          valueColor={ecStatus.color}
-          extra={<span className={`badge ${ecStatus.badge}`}>{ecStatus.label}</span>}
         />
 
         {/* Water Level */}
