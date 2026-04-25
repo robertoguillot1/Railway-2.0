@@ -16,6 +16,12 @@ async function apiFetch(path, options = {}) {
 export const getFarms = () => apiFetch('/api/v1/farms/farms/').catch(() => []);
 export const getZones = (farmId) =>
   apiFetch(farmId ? `/api/v1/farms/zones/?farm=${farmId}` : '/api/v1/farms/zones/');
+export const createZone = (data) =>
+  apiFetch('/api/v1/farms/zones/', { method: 'POST', body: JSON.stringify(data) });
+export const updateZone = (id, data) =>
+  apiFetch(`/api/v1/farms/zones/${id}/`, { method: 'PATCH', body: JSON.stringify(data) });
+export const deleteZone = (id) =>
+  apiFetch(`/api/v1/farms/zones/${id}/`, { method: 'DELETE' });
 export const getCropTypes = () => apiFetch('/api/v1/farms/crops/');
 
 // ─── DEVICES ──────────────────────────────────────────────────────────────────

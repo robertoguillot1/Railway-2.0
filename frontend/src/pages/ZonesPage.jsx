@@ -1,45 +1,51 @@
 // src/pages/ZonesPage.jsx
-// Vista de zonas hidropónicas con info de cultivos y progreso de ciclo
+// Vista de zonas hidropónicas con gestión CRUD completa
 
+import { useState } from 'react';
 import { useApp } from '../context/AppContext';
-import { STAGE_COLORS } from '../utils/helpers';
+import { deleteZone, createZone, updateZone } from '../api/hydroApi';
+import { STAGE_DISPLAY } from '../utils/helpers';
 
-const STAGE_DISPLAY = {
-  GERMINATION: { label: 'Germinación', icon: 'fa-seedling', color: '#8b5cf6' },
-  GROWTH: { label: 'Crecimiento', icon: 'fa-leaf', color: '#10b981' },
-  FLOWERING: { label: 'Floración', icon: 'fa-spa', color: '#f59e0b' },
-  HARVEST: { label: 'Cosecha', icon: 'fa-wheat-awn', color: '#ef4444' },
-};
-
-const MOCK_ZONES = [
-  { id: 1, name: 'Módulo A - Lechuga', code: 'zona-a', current_stage: 'GROWTH', crop_type: { name: 'Lechuga Butterhead', duration_days: 35 }, start_date: '2026-04-01', current_day: 24, active: true },
-  { id: 2, name: 'Módulo B - Albahaca', code: 'zona-b', current_stage: 'GERMINATION', crop_type: { name: 'Albahaca Genovesa', duration_days: 28 }, start_date: '2026-04-15', current_day: 10, active: true },
-  { id: 3, name: 'Módulo C - Espinaca', code: 'zona-c', current_stage: 'HARVEST', crop_type: { name: 'Espinaca Baby', duration_days: 30 }, start_date: '2026-03-20', current_day: 36, active: false },
-];
-
-function ZoneCard({ zone }) {
-  const stage = STAGE_DISPLAY[zone.current_stage] || STAGE_DISPLAY.GROWTH;
+function ZoneCard({ zone, onDelete, onToggle }) {
+  const stage = STAGE_DISPLAY[zone.current_stage] || { label: 'Crecimiento', icon: 'fa-leaf', color: '#10b981' };
   const progress = Math.min((zone.current_day / (zone.crop_type?.duration_days || 30)) * 100, 100);
 
   return (
-    <div className="glass-panel" style={{ opacity: zone.active ? 1 : 0.6 }}>
+    <div className="glass-panel" style={{ opacity: zone.active ? 1 : 0.6, position: 'relative' }}>
       <div className="panel-inner">
+        {/* Actions Floating */}
+        <div style={{ position: 'absolute', top: 12, right: 12, display: 'flex', gap: 6 }}>
+          <button 
+            onClick={() => onToggle(zone.id, !zone.active)}
+            style={{ width: 28, height: 28, borderRadius: 8, border: 'none', background: 'rgba(255,255,255,0.05)', color: 'white', cursor: 'pointer', fontSize: 10 }}
+            title={zone.active ? 'Desactivar' : 'Activar'}
+          >
+            <i className={`fas ${zone.active ? 'fa-eye-slash' : 'fa-eye'}`} />
+          </button>
+          <button 
+            onClick={() => { if(confirm('¿Eliminar este módulo definitivamente?')) onDelete(zone.id) }}
+            style={{ width: 28, height: 28, borderRadius: 8, border: 'none', background: 'rgba(239,68,68,0.1)', color: '#ef4444', cursor: 'pointer', fontSize: 10 }}
+            title="Eliminar"
+          >
+            <i className="fas fa-trash" />
+          </button>
+        </div>
+
         {/* Header */}
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 18 }}>
-          <div>
-            <div style={{ fontFamily: 'Outfit', fontWeight: 700, fontSize: '1rem', marginBottom: 4 }}>{zone.name}</div>
-            <div style={{ fontSize: 10, color: 'var(--text-dim)', letterSpacing: 0.5 }}>
-              <i className="fas fa-qrcode" style={{ marginRight: 5 }} />{zone.code}
-            </div>
+        <div style={{ marginBottom: 18, paddingRight: 60 }}>
+          <div style={{ fontFamily: 'Outfit', fontWeight: 700, fontSize: '1rem', marginBottom: 4 }}>{zone.name}</div>
+          <div style={{ fontSize: 10, color: 'var(--text-dim)', letterSpacing: 0.5 }}>
+            <i className="fas fa-qrcode" style={{ marginRight: 5 }} />{zone.code}
           </div>
-          <div style={{ display: 'flex', gap: 8 }}>
-            <span className="badge" style={{ background: `${stage.color}20`, color: stage.color }}>
-              <i className={`fas ${stage.icon}`} /> {stage.label}
-            </span>
-            <span className={`badge ${zone.active ? 'badge-ok' : 'badge-danger'}`}>
-              {zone.active ? 'ACTIVO' : 'INACTIVO'}
-            </span>
-          </div>
+        </div>
+
+        <div style={{ display: 'flex', gap: 8, marginBottom: 16 }}>
+          <span className="badge" style={{ background: `${stage.color}20`, color: stage.color }}>
+            <i className={`fas ${stage.icon}`} /> {stage.label}
+          </span>
+          <span className={`badge ${zone.active ? 'badge-ok' : 'badge-danger'}`}>
+            {zone.active ? 'ACTIVO' : 'INACTIVO'}
+          </span>
         </div>
 
         {/* Crop Info */}
@@ -51,7 +57,7 @@ function ZoneCard({ zone }) {
           <div style={{ background: 'rgba(0,0,0,0.2)', borderRadius: 11, padding: '12px 14px' }}>
             <div style={{ fontSize: 9, color: 'var(--text-dim)', letterSpacing: 1, marginBottom: 4 }}>DÍA DEL CICLO</div>
             <div style={{ fontSize: 12, fontWeight: 700, color: stage.color }}>
-              Día {zone.current_day} / {zone.crop_type?.duration_days || '—'}
+              Día {zone.current_day || 0} / {zone.crop_type?.duration_days || 30}
             </div>
           </div>
         </div>
@@ -67,7 +73,6 @@ function ZoneCard({ zone }) {
           </div>
         </div>
 
-        {/* Start date */}
         <div style={{ fontSize: 10, color: 'var(--text-dim)', marginTop: 10 }}>
           <i className="fas fa-calendar" style={{ marginRight: 6 }} />
           Inicio: {zone.start_date || '—'}
@@ -78,25 +83,94 @@ function ZoneCard({ zone }) {
 }
 
 export default function ZonesPage() {
-  const { zones } = useApp();
+  const { zones, setZones, addLog, farms } = useApp();
+  const [loading, setLoading] = useState(false);
+
+  const handleAddZone = async () => {
+    const name = prompt('Nombre del nuevo módulo (Ej: Modulo F6):');
+    if (!name) return;
+    const code = name.toLowerCase().replace(/\s+/g, '-');
+    
+    try {
+      setLoading(true);
+      const newZone = await createZone({ 
+        name, 
+        code, 
+        farm: farms[0]?.id || 1, // Usar la primera granja disponible
+        current_stage: 'GERMINATION',
+        active: true,
+        start_date: new Date().toISOString().split('T')[0]
+      });
+      setZones(prev => [...prev, newZone]);
+      addLog(`✅ NUBE: Módulo "${name}" creado exitosamente.`);
+    } catch (err) {
+      alert('Error al crear módulo. Verifica la conexión.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleDelete = async (id) => {
+    try {
+      await deleteZone(id);
+      setZones(prev => prev.filter(z => z.id !== id));
+      addLog(`🗑️ NUBE: Módulo eliminado.`);
+    } catch (err) {
+      alert('No se pudo eliminar el módulo.');
+    }
+  };
+
+  const handleToggle = async (id, active) => {
+    try {
+      await updateZone(id, { active });
+      setZones(prev => prev.map(z => z.id === id ? { ...z, active } : z));
+      addLog(`👁️ NUBE: Estado de módulo actualizado.`);
+    } catch (err) {
+      alert('No se pudo actualizar el estado.');
+    }
+  };
 
   return (
     <div>
-      <div style={{ marginBottom: 24 }}>
-        <h1 style={{ fontFamily: 'Outfit', fontSize: '1.4rem', fontWeight: 700, marginBottom: 6 }}>
-          Módulos Hidropónicos
-        </h1>
-        <p style={{ color: 'var(--text-dim)', fontSize: 13 }}>
-          Monitoreo de ciclos de cultivo y etapas de crecimiento por zona.
-        </p>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
+        <div>
+          <h1 style={{ fontFamily: 'Outfit', fontSize: '1.4rem', fontWeight: 700, marginBottom: 6 }}>
+            Módulos Hidropónicos
+          </h1>
+          <p style={{ color: 'var(--text-dim)', fontSize: 13 }}>
+            Gestiona tus zonas de cultivo, añade nuevos módulos o edita los existentes.
+          </p>
+        </div>
+        <button 
+          onClick={handleAddZone}
+          disabled={loading}
+          style={{ 
+            padding: '10px 20px', borderRadius: 12, background: 'var(--primary)', 
+            border: 'none', color: '#0f1520', fontWeight: 800, fontSize: 12, 
+            cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 8,
+            boxShadow: '0 4px 15px var(--primary-glow)', opacity: loading ? 0.7 : 1
+          }}
+        >
+          <i className="fas fa-plus" />
+          AÑADIR MÓDULO
+        </button>
       </div>
+
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(340px, 1fr))', gap: 18 }}>
         {zones.length === 0 ? (
-          <div style={{ color: 'var(--text-dim)', textAlign: 'center', padding: '40px' }}>
-            No hay zonas registradas en la nube.
+          <div style={{ gridColumn: '1/-1', color: 'var(--text-dim)', textAlign: 'center', padding: '60px', background: 'rgba(255,255,255,0.02)', borderRadius: 20, border: '1px dashed rgba(255,255,255,0.1)' }}>
+            <i className="fas fa-seedling" style={{ fontSize: 40, marginBottom: 16, display: 'block', opacity: 0.3 }} />
+            No hay zonas registradas. ¡Crea tu primera zona arriba!
           </div>
         ) : (
-          zones.map(zone => <ZoneCard key={zone.id} zone={zone} />)
+          zones.map(zone => (
+            <ZoneCard 
+              key={zone.id} 
+              zone={zone} 
+              onDelete={handleDelete}
+              onToggle={handleToggle}
+            />
+          ))
         )}
       </div>
     </div>
