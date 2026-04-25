@@ -1,6 +1,7 @@
 from django.contrib import admin
 from django.urls import path, include
 from drf_spectacular.views import SpectacularAPIView, SpectacularRedocView, SpectacularSwaggerView
+from modules.automation.views import LegacyTelemetriaView
 from rest_framework_simplejwt.views import (
     TokenObtainPairView,
     TokenRefreshView,
@@ -23,4 +24,8 @@ urlpatterns = [
     path('api/v1/farms/', include('modules.farms.urls')),
     path('api/v1/devices/', include('modules.devices.urls')),
     path('api/v1/automation/', include('modules.automation.urls')),
+    
+    # Legacy compatibility for ESP32 (Wokwi)
+    path('api/telemetria/', LegacyTelemetriaView.as_view()),
+    path('api/telemetria', LegacyTelemetriaView.as_view()),
 ]
