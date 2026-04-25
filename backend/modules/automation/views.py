@@ -3,6 +3,8 @@ from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from django.http import HttpResponse
+from django.views.decorators.csrf import csrf_exempt
+from django.utils.decorators import method_decorator
 import openpyxl
 import json
 from .models import SensorReading, SystemEvent
@@ -43,6 +45,7 @@ class SensorReadingViewSet(viewsets.ModelViewSet):
         wb.save(response)
         return response
 
+@method_decorator(csrf_exempt, name='dispatch')
 class LegacyTelemetriaView(APIView):
     """
     Endpoint de compatibilidad para el ESP32 (Wokwi).
@@ -54,6 +57,7 @@ class LegacyTelemetriaView(APIView):
     def post(self, request):
         try:
             payload = request.data
+            print(f"📥 RECIBIENDO DATOS: {request.data}")
             
             # 1. Obtener o crear dispositivo por defecto para Wokwi
             # Usamos device_id="WOKWI-001" y name="ESP32 Wokwi"
