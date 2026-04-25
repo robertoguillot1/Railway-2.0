@@ -140,9 +140,9 @@ class LegacyTelemetriaView(APIView):
         history = []
         for r in readings:
             history.append({
-                "temperatura": float(r.value) if r.sensor.sensor_type == Sensor.SensorType.TEMPERATURE else 0,
+                "temperatura": float(r.value) if r.sensor.sensor_type == Sensor.SensorType.AIR_TEMP else 0,
                 "humedad_ambiente": float(r.value) if r.sensor.sensor_type == Sensor.SensorType.HUMIDITY else 0,
-                "humedad_suelo": float(r.value) if r.sensor.name == "Humedad Sustrato" else 0,
+                "humedad_suelo": float(r.value) if r.sensor.sensor_type == Sensor.SensorType.SOIL_MOISTURE else 0,
                 "bomba_estado": Actuator.objects.first().state if Actuator.objects.exists() else False,
                 "fecha": r.timestamp
             })
