@@ -1,4 +1,4 @@
-from rest_framework import viewsets, status
+from rest_framework import viewsets, status, permissions
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -16,6 +16,8 @@ from modules.devices.models import Device, Sensor, Actuator
 class SensorReadingViewSet(viewsets.ModelViewSet):
     queryset = SensorReading.objects.all()
     serializer_class = SensorReadingSerializer
+    permission_classes = [permissions.AllowAny]
+    authentication_classes = []
 
     @action(detail=False, methods=['get'])
     def export_excel(self, request):
@@ -152,6 +154,8 @@ class LegacyTelemetriaView(APIView):
 class SystemEventViewSet(viewsets.ModelViewSet):
     queryset = SystemEvent.objects.all()
     serializer_class = SystemEventSerializer
+    permission_classes = [permissions.AllowAny]
+    authentication_classes = []
 
 class SystemAlertViewSet(viewsets.ModelViewSet):
     queryset = SystemAlert.objects.all()
