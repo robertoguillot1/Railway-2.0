@@ -5,9 +5,16 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 SECRET_KEY = 'django-insecure-hydro-smart-pro-key-v2'
 
-DEBUG = True
+DEBUG = os.environ.get('DJANGO_DEBUG', 'False').lower() == 'true'
 
-ALLOWED_HOSTS = ['*']
+# En producción, solo permitimos dominios de Railway y localhost
+ALLOWED_HOSTS = [
+    'railway-20-production-7eaa.up.railway.app',
+    'observant-courage-production.up.railway.app',
+    'localhost',
+    '127.0.0.1',
+    '.up.railway.app' # Permitir subdominios de Railway
+]
 
 INSTALLED_APPS = [
     'django.contrib.admin',
@@ -125,6 +132,7 @@ SPECTACULAR_SETTINGS = {
     'DESCRIPTION': 'API Modular para Sistemas Hidroponicos Inteligentes',
     'VERSION': '2.0.0',
     'SERVE_INCLUDE_SCHEMA': False,
+    'SERVE_PERMISSIONS': ['rest_framework.permissions.IsAdminUser'],
 }
 
 from datetime import timedelta
@@ -134,4 +142,9 @@ SIMPLE_JWT = {
     'AUTH_HEADER_TYPES': ('Bearer',),
 }
 
-CORS_ALLOW_ALL_ORIGINS = True # Para desarrollo, permite conectar el front facilmente
+# CORS estricto: solo permitimos tu frontend de Railway y local
+CORS_ALLOWED_ORIGINS = [
+    "https://observant-courage-production.up.railway.app",
+    "http://localhost:5173",
+    "http://127.0.0.1:5173",
+]
