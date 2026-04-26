@@ -16,8 +16,6 @@ from modules.devices.models import Device, Sensor, Actuator
 class SensorReadingViewSet(viewsets.ModelViewSet):
     queryset = SensorReading.objects.all()
     serializer_class = SensorReadingSerializer
-    permission_classes = [permissions.AllowAny]
-    authentication_classes = []
 
     @action(detail=False, methods=['get'])
     def export_excel(self, request):
@@ -56,7 +54,7 @@ class LegacyTelemetriaView(APIView):
     Recibe el formato antiguo y lo traduce al nuevo modelo modular.
     """
     authentication_classes = [] 
-    permission_classes = []
+    permission_classes = [permissions.AllowAny] # Necesario para el POST del ESP32
     serializer_class = TelemetriaSerializer
 
     def post(self, request):
@@ -137,6 +135,9 @@ class LegacyTelemetriaView(APIView):
         """
         Devuelve el historial en el formato antiguo para el Dashboard original.
         """
+        if not request.user.is_authenticated:
+            return Response({"detail": "No autorizado"}, status=401)
+        
         readings = SensorReading.objects.all().order_by('-timestamp')[:30]
         # Agrupamos por timestamp para simular los registros antiguos
         # (Esto es una simplificación para que tu Dashboard siga mostrando gráficas)
@@ -154,11 +155,7 @@ class LegacyTelemetriaView(APIView):
 class SystemEventViewSet(viewsets.ModelViewSet):
     queryset = SystemEvent.objects.all()
     serializer_class = SystemEventSerializer
-    permission_classes = [permissions.AllowAny]
-    authentication_classes = []
 
 class SystemAlertViewSet(viewsets.ModelViewSet):
     queryset = SystemAlert.objects.all()
     serializer_class = SystemAlertSerializer
-    authentication_classes = [] 
-    permission_classes = [] # Permitir acceso público para demo/simplificación
