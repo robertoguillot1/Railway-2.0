@@ -62,10 +62,10 @@ body {
   flex: 1;
   margin-left: var(--sidebar-w);
   overflow-y: auto;
-  padding: 20px;
+  padding: 16px;
   display: flex;
   flex-direction: column;
-  gap: 20px;
+  gap: 16px;
   width: 100%;
 }
 
@@ -573,23 +573,43 @@ body {
 }
 
 @media (max-width: 768px) {
-  :root { --sidebar-w: 0px; --header-h: 60px; }
+  :root { --sidebar-w: 0px; --header-h: 65px; }
   
   body { overflow-y: auto; }
   .app-layout { height: auto; overflow: visible; }
-  .main-wrapper { overflow: visible; }
+  .main-wrapper { overflow: visible; margin-top: var(--header-h); }
 
   .content-area { 
-    padding: 15px; 
+    padding: 10px; 
     padding-bottom: 90px; /* Space for bottom nav */
     margin-left: 0; 
   }
 
+  header { 
+    padding: 0 10px !important; 
+    height: var(--header-h) !important;
+  }
+
+  .header-pills { 
+    gap: 4px !important; 
+  }
+  
+  .header-subtitle { display: none !important; }
+  .header-status-text { display: none !important; }
+
   aside { display: none !important; } /* Hide fixed sidebar */
 
-  .dashboard-grid { gap: 15px; }
-  .glass-panel { border-radius: 14px; }
-  .panel-inner { padding: 18px; }
+  .dashboard-grid { gap: 12px; }
+  .glass-panel { border-radius: 12px; }
+  .panel-inner { padding: 12px; }
+
+  /* Responsive Panel Header */
+  .panel-top-bar {
+    flex-direction: column;
+    align-items: flex-start !important;
+    gap: 8px;
+    margin-bottom: 12px;
+  }
   
   /* Mobile Bottom Nav Bar */
   .mobile-nav {
@@ -598,15 +618,18 @@ body {
     bottom: 0;
     left: 0;
     right: 0;
-    height: 70px;
-    background: rgba(13, 20, 36, 0.95);
-    backdrop-filter: blur(15px);
+    height: 60px;
+    background: rgba(13, 20, 36, 0.98);
+    backdrop-filter: blur(20px);
     border-top: 1px solid var(--panel-border);
     z-index: 2000;
     justify-content: space-around;
     align-items: center;
-    padding: 0 10px;
+    padding: 0 5px;
   }
 
-  #scene-container { height: 300px !important; }
+  .mobile-hide { display: none !important; }
+
+  #scene-container { height: 260px !important; }
+  #analytics-container { height: auto !important; }
 }

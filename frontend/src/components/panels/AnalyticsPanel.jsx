@@ -46,12 +46,19 @@ export default function AnalyticsPanel() {
 
   return (
     <div id="analytics-container" className="glass-panel" style={{ height: '100%' }}>
-      <div style={{ padding: '16px 18px 0', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-        <div className="panel-header" style={{ marginBottom: 0 }}>
+      <div className="panel-top-bar" style={{ padding: '16px 18px 0', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+        <div className="panel-header" style={{ marginBottom: 0, whiteSpace: 'nowrap' }}>
           <i className="fas fa-chart-area" />
-          Analítica — Histórico en Tiempo Real
+          Analítica — Histórico
         </div>
-        <div style={{ display: 'flex', gap: 8 }}>
+        <div style={{ 
+          display: 'flex', 
+          gap: 6, 
+          overflowX: 'auto', 
+          maxWidth: '100%',
+          paddingBottom: '4px',
+          scrollbarWidth: 'none'
+        }}>
           {SENSORS.map(s => (
             <button
               key={s.key}
@@ -60,7 +67,7 @@ export default function AnalyticsPanel() {
               style={{
                 border: `1px solid ${active.includes(s.key) ? s.color : 'rgba(255,255,255,0.06)'}`,
                 borderRadius: 7,
-                padding: '4px 10px',
+                padding: '4px 8px',
                 fontSize: 9,
                 fontWeight: 700,
                 cursor: 'pointer',
@@ -68,16 +75,17 @@ export default function AnalyticsPanel() {
                 color: active.includes(s.key) ? s.color : 'var(--text-dim)',
                 letterSpacing: 0.5,
                 transition: 'all 0.2s',
+                whiteSpace: 'nowrap'
               }}
             >
-              {s.label}
+              {s.label.split(' ')[0]}
             </button>
           ))}
         </div>
       </div>
       <div style={{ flex: 1, padding: '10px 8px 12px' }}>
         <ResponsiveContainer width="100%" height={175}>
-          <LineChart data={data} margin={{ top: 5, right: 10, left: -25, bottom: 0 }}>
+          <LineChart data={data} margin={{ top: 5, right: 5, left: -30, bottom: 0 }}>
             <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.04)" />
             <XAxis dataKey="name" tick={false} axisLine={false} />
             <YAxis tick={{ fontSize: 9, fill: '#64748b' }} axisLine={false} tickLine={false} />

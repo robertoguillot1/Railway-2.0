@@ -41,30 +41,30 @@ export default function Header() {
           <div style={{ fontFamily: 'Outfit', fontWeight: 800, fontSize: '1.05rem', color: 'var(--text-main)' }}>
             HydroSmart <span style={{ color: 'var(--primary)' }}>Pro</span>
           </div>
-          <div style={{ fontSize: 9, color: 'var(--text-dim)', letterSpacing: 1 }}>
+          <div className="header-subtitle" style={{ fontSize: 9, color: 'var(--text-dim)', letterSpacing: 1 }}>
             DASHBOARD IoT HIDROPÓNICO
           </div>
         </div>
       </div>
 
       {/* Status Pills */}
-      <div style={{ display: 'flex', gap: 10, alignItems: 'center', flexWrap: 'wrap' }}>
+      <div className="header-pills" style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
         {/* ESP Status */}
-        <div className={`status-pill ${online ? 'pill-green' : 'pill-gray'}`}>
+        <div className={`status-pill ${online ? 'pill-green' : 'pill-gray'}`} style={{ padding: '4px 10px' }}>
           <div className={`status-dot ${online ? 'pulse' : 'offline'}`} />
-          {statusText}
+          <span className="header-status-text">{statusText}</span>
         </div>
 
         {/* Signal */}
         {connectionMode === 'cloud' && isConnected && (
-          <div className="status-pill pill-gray">
+          <div className="status-pill pill-gray" style={{ padding: '4px 10px' }}>
             <i className="fas fa-wifi" />
-            {telemetry.signal}% SIGNAL
+            <span className="header-status-text">{telemetry.signal}%</span>
           </div>
         )}
 
         {/* Clock */}
-        <div className="status-pill pill-gray">
+        <div className="status-pill pill-gray" style={{ padding: '4px 10px' }}>
           <i className="far fa-clock" />
           {time}
         </div>
@@ -74,10 +74,10 @@ export default function Header() {
           id="btn-ia-header"
           onClick={() => setIaModalOpen(true)}
           className="status-pill pill-purple"
-          style={{ cursor: 'pointer', border: 'none', background: 'rgba(139,92,246,0.2)', fontFamily: 'inherit', letterSpacing: '0.5px', fontWeight: 700, fontSize: 11 }}
+          style={{ cursor: 'pointer', border: 'none', background: 'rgba(139,92,246,0.2)', fontFamily: 'inherit', letterSpacing: '0.5px', fontWeight: 700, fontSize: 11, padding: '4px 10px' }}
         >
           <i className="fas fa-robot" />
-          AGRO-IA
+          <span className="header-status-text">AGRO-IA</span>
         </button>
       </div>
     </header>

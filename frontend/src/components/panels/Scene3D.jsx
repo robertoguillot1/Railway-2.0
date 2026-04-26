@@ -264,20 +264,20 @@ export default function Scene3D() {
 
       {/* Day Label */}
       <div style={{
-        position: 'absolute', top: 16, left: 16,
-        background: 'rgba(0,0,0,0.65)',
+        position: 'absolute', top: 12, left: 12,
+        background: 'rgba(0,0,0,0.7)',
         backdropFilter: 'blur(8px)',
-        padding: '8px 16px',
+        padding: '6px 12px',
         borderRadius: 50,
-        fontSize: 11, fontWeight: 700,
+        fontSize: 10, fontWeight: 700,
         fontFamily: 'Outfit',
         border: '1px solid rgba(255,255,255,0.08)',
-        display: 'flex', alignItems: 'center', gap: 8,
+        display: 'flex', alignItems: 'center', gap: 6,
         letterSpacing: 0.5,
       }}>
         <span>☀️</span>
         <span style={{ color: 'var(--text-main)' }}>DÍA {cropDay}</span>
-        <span style={{ color: 'var(--primary)' }}>/ ETAPA {stage}</span>
+        <span className="mobile-hide" style={{ color: 'var(--primary)' }}>/ ETAPA {stage}</span>
       </div>
 
       {/* View Selector */}
