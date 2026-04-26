@@ -4,7 +4,7 @@ import { useAuth } from '../../context/AuthContext';
 
 export default function MobileNav() {
   const { activePage, setActivePage } = useApp();
-  const { isAdmin } = useAuth();
+  const { isAdmin, logout } = useAuth();
 
   const items = [
     { id: 'dashboard', icon: 'fa-th-large' },
@@ -35,6 +35,18 @@ export default function MobileNav() {
           <i className={`fas ${item.icon}`} />
         </button>
       ))}
+      <button
+        onClick={() => { if (confirm('¿Cerrar sesión?')) logout(); }}
+        style={{
+          background: 'none',
+          border: 'none',
+          color: '#ef4444',
+          fontSize: '20px',
+          padding: '10px',
+        }}
+      >
+        <i className="fas fa-sign-out-alt" />
+      </button>
     </nav>
   );
 }
