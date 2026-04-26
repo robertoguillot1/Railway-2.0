@@ -16,7 +16,9 @@ function TypeWriter({ text, speed = 12 }) {
     }, speed);
     return () => clearInterval(interval);
   }, [text, speed]);
-  return <span dangerouslySetInnerHTML={{ __html: displayed }} />;
+  
+  // Renderizado seguro: React escapa el texto automáticamente
+  return <span>{displayed.replace(/<[^>]*>?/gm, '')}</span>; 
 }
 
 function generateDiagnosis(telemetry, cropDay) {
@@ -127,10 +129,10 @@ export default function IAModal() {
                       borderRadius: 8,
                       padding: '10px 14px',
                       fontSize: 12,
-                      color: 'var(--text-dim)',
                     }}
-                      dangerouslySetInnerHTML={{ __html: issue }}
-                    />
+                    >
+                      {issue.replace(/<[^>]*>?/gm, '')}
+                    </div>
                   ))}
                 </div>
               )}
