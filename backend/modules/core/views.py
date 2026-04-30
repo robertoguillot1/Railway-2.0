@@ -11,6 +11,30 @@ class IsAdminUser(permissions.BasePermission):
     def has_permission(self, request, view):
         return request.user and request.user.is_authenticated and (request.user.is_staff or request.user.is_superuser)
 
+class AuditMixin:
+    """
+    Mixin para registrar automáticamente acciones de CRUD en el Log de Auditoría.
+    """
+    def perform_create(self, serializer):
+        instance = serializer.save()
+        self.log_audit('CREATE', instance)
+
+    def perform_update(self, serializer):
+        instance = serializer.save()
+        self.log_audit('UPDATE', instance)
+
+    def perform_destroy(self, instance):
+        self.log_audit('DELETE', instance)
+        instance.delete()
+
+    def log_audit(self, action, instance):
+        AuditLog.objects.create(
+            user=self.request.user if self.request.user.is_authenticated else None,
+            action=action,
+            model_name=instance.__class__.__name__,
+            object_id=str(instance.pk)
+        )
+
 @api_view(['GET', 'POST'])
 @permission_classes([permissions.IsAuthenticated])
 def me_view(request):

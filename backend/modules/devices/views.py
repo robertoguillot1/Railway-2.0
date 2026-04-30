@@ -1,16 +1,16 @@
-from rest_framework import viewsets, permissions
+from modules.core.views import AuditMixin
 from .models import Device, Sensor, Actuator, ActuatorStateHistory
 from .serializers import DeviceSerializer, SensorSerializer, ActuatorSerializer, ActuatorStateHistorySerializer
 
-class DeviceViewSet(viewsets.ModelViewSet):
+class DeviceViewSet(AuditMixin, viewsets.ModelViewSet):
     queryset = Device.objects.all()
     serializer_class = DeviceSerializer
 
-class SensorViewSet(viewsets.ModelViewSet):
+class SensorViewSet(AuditMixin, viewsets.ModelViewSet):
     queryset = Sensor.objects.all()
     serializer_class = SensorSerializer
 
-class ActuatorViewSet(viewsets.ModelViewSet):
+class ActuatorViewSet(AuditMixin, viewsets.ModelViewSet):
     queryset = Actuator.objects.all()
     serializer_class = ActuatorSerializer
 

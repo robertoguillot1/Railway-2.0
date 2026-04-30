@@ -7,12 +7,12 @@ from django.views.decorators.csrf import csrf_exempt
 from django.utils.decorators import method_decorator
 import openpyxl
 import json
-from .models import SensorReading, SystemEvent, SystemAlert
 from django.utils import timezone
 from datetime import timedelta
-from .serializers import SensorReadingSerializer, SystemEventSerializer, SystemAlertSerializer, TelemetriaSerializer, IrrigationRuleSerializer
+from modules.core.views import AuditMixin
 from modules.devices.models import Device, Sensor, Actuator
 from .models import SensorReading, SystemEvent, SystemAlert, IrrigationRule
+from .serializers import SensorReadingSerializer, SystemEventSerializer, SystemAlertSerializer, TelemetriaSerializer, IrrigationRuleSerializer
 
 class SensorReadingViewSet(viewsets.ModelViewSet):
     queryset = SensorReading.objects.all()
@@ -161,7 +161,6 @@ class SystemAlertViewSet(viewsets.ModelViewSet):
     queryset = SystemAlert.objects.all()
     serializer_class = SystemAlertSerializer
 
-class IrrigationRuleViewSet(viewsets.ModelViewSet):
+class IrrigationRuleViewSet(AuditMixin, viewsets.ModelViewSet):
     queryset = IrrigationRule.objects.all()
     serializer_class = IrrigationRuleSerializer
-

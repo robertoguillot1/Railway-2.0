@@ -23,7 +23,7 @@ export default function AuditLogsPage() {
         const data = await getAuditLogs();
         // Ordenar por fecha descendente si no viene así
         const sorted = (Array.isArray(data) ? data : []).sort((a, b) => 
-          new Date(b.timestamp) - new Date(a.timestamp)
+          new Date(b.created_at) - new Date(a.created_at)
         );
         setLogs(sorted);
       } catch (err) {
