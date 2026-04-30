@@ -42,6 +42,8 @@ export const getAuditLogs = () => apiFetch('/api/v1/core/audit-logs/').catch(() 
 export const getMyResources = () => apiFetch('/api/v1/core/mis-recursos/').catch(() => []);
 export const updateProfile = (data) =>
   apiFetch('/api/v1/core/me/', { method: 'PATCH', body: JSON.stringify(data) });
+export const changePassword = (password) =>
+  apiFetch('/api/v1/core/me/', { method: 'POST', body: JSON.stringify({ password }) });
 
 // ─── DEVICES (CRUD Completo) ───────────────────────────────────────────────────
 export const getDevices = () => apiFetch('/api/v1/devices/list/');

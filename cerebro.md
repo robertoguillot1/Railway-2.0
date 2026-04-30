@@ -576,4 +576,25 @@ Se implementó una nueva página de "Trazabilidad" para administradores que perm
 
 ---
 
-*Documento actualizado - Proyecto HydroSmart Pro - Trazabilidad Operativa*
+---
+
+## Cambio 9: Gestión de Seguridad y Cambio de Contraseña
+
+### Fecha: 2026-04-30
+
+### Resumen
+Se habilitó la funcionalidad de cambio de contraseña para los usuarios y se realizaron los ajustes necesarios en el backend para permitir esta operación de forma segura.
+
+### Cambios Realizados:
+1. **Backend (módulo `core`)**:
+   - Actualización de `me_view` para aceptar peticiones `POST` que procesan el cambio de contraseña del usuario autenticado.
+   - Agregada acción `set_password` al `UserManagementViewSet` para administración remota de claves por parte de administradores.
+2. **Frontend (`SettingsPage.jsx`)**:
+   - Nueva pestaña de **"Seguridad"** con un formulario validado (coincidencia de claves y longitud mínima).
+   - Integración con el nuevo endpoint de cambio de clave.
+3. **API Centralizada**:
+   - Agregada la función `changePassword` en `hydroApi.js`.
+
+---
+
+*Documento actualizado - Proyecto HydroSmart Pro - Seguridad Reforzada*

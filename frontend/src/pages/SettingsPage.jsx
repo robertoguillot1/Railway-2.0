@@ -99,6 +99,7 @@ export default function SettingsPage() {
           { id: 'automation', label: 'Automatización', icon: 'fa-robot' },
           { id: 'system', label: 'Sistema', icon: 'fa-cog' },
           { id: 'profile', label: 'Perfil', icon: 'fa-user-circle' },
+          { id: 'security', label: 'Seguridad', icon: 'fa-shield-halved' },
           { id: 'farms', label: 'Fincas', icon: 'fa-tractor' }
         ].map(t => (
           <button
@@ -363,6 +364,50 @@ export default function SettingsPage() {
           >
             <i className="fas fa-edit" style={{ marginRight: 8 }} /> EDITAR PERFIL
           </button>
+        </div>
+      )}
+
+      {activeTab === 'security' && (
+        <div className="glass-panel" style={{ padding: 30, maxWidth: 500, margin: '0 auto' }}>
+          <div className="panel-header" style={{ marginBottom: 25 }}>
+            <i className="fas fa-shield-halved" /> Seguridad de la Cuenta
+          </div>
+          <p style={{ fontSize: 12, color: 'var(--text-dim)', marginBottom: 25 }}>
+            Actualiza tu contraseña periódicamente para mantener tu instalación segura.
+          </p>
+          
+          <form onSubmit={async (e) => {
+            e.preventDefault();
+            const fd = new FormData(e.target);
+            const p1 = fd.get('p1');
+            const p2 = fd.get('p2');
+            if (p1 !== p2) return alert('Las contraseñas no coinciden');
+            if (p1.length < 6) return alert('La contraseña debe tener al menos 6 caracteres');
+            
+            setLoading(true);
+            try {
+              const { changePassword } = await import('../api/hydroApi');
+              await changePassword(p1);
+              alert('Contraseña actualizada con éxito');
+              e.target.reset();
+            } catch (err) {
+              alert('Error al actualizar contraseña');
+            } finally {
+              setLoading(false);
+            }
+          }}>
+            <div style={{ marginBottom: 18 }}>
+              <label style={{ fontSize: 10, fontWeight: 700, color: 'var(--text-dim)', display: 'block', marginBottom: 8 }}>NUEVA CONTRASEÑA</label>
+              <input name="p1" type="password" required style={{ width: '100%', padding: '12px', borderRadius: 10, background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: 'white' }} />
+            </div>
+            <div style={{ marginBottom: 25 }}>
+              <label style={{ fontSize: 10, fontWeight: 700, color: 'var(--text-dim)', display: 'block', marginBottom: 8 }}>CONFIRMAR CONTRASEÑA</label>
+              <input name="p2" type="password" required style={{ width: '100%', padding: '12px', borderRadius: 10, background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: 'white' }} />
+            </div>
+            <button type="submit" disabled={loading} className="btn-primary" style={{ width: '100%', padding: '14px', borderRadius: 12, fontWeight: 800 }}>
+              {loading ? 'ACTUALIZANDO...' : 'CAMBIAR CONTRASEÑA'}
+            </button>
+          </form>
         </div>
       )}
 
