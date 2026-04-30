@@ -73,6 +73,24 @@ export function AppProvider({ children }) {
 
   const handleSetSelectedFarm = useCallback((farm) => {
     setSelectedFarm(farm);
+    setZones([]); // Limpiar zonas actuales
+    
+    // IMPORTANTE: Resetear dispositivo seleccionado y telemetría
+    setSelectedDeviceId(null);
+    selectedDeviceIdRef.current = null;
+    localStorage.removeItem('hydro_selected_device');
+    
+    setTelemetry({
+      humidity: 0,
+      temperature: 0,
+      airHumidity: 0,
+      ph: 7.0,
+      ec: 0,
+      waterLevel: 0,
+      pumpState: false,
+      signal: 0,
+    });
+
     if (farm) {
       localStorage.setItem('hydro_selected_farm', JSON.stringify(farm));
     } else {
@@ -206,7 +224,7 @@ export function AppProvider({ children }) {
           // Filtrar SOLO las lecturas del dispositivo seleccionado
           const relevantReadings = currentDeviceId
             ? allReadings.filter(r => r.device_id === currentDeviceId)
-            : allReadings;
+            : []; // Si no hay dispositivo seleccionado, no hay lecturas relevantes
 
           // Ordenar por timestamp descendente y tomar el más reciente de cada tipo
           const sorted = [...relevantReadings].sort((a, b) =>
@@ -246,6 +264,19 @@ export function AppProvider({ children }) {
               ph: [...prev.ph.slice(1), byType.ph ?? prev.ph.at(-1) ?? 0],
               ec: [...prev.ec.slice(1), byType.ec ?? prev.ec.at(-1) ?? 0],
             }));
+          } else {
+            // Si no hay lecturas relevantes para el dispositivo seleccionado,
+            // podemos optar por resetear a 0 o mantener el estado.
+            // Para responder al usuario, reseteamos si no hay dispositivo.
+            if (!currentDeviceId) {
+              setTelemetry(prev => ({
+                ...prev,
+                humidity: 0,
+                temperature: 0,
+                airHumidity: 0,
+                signal: 0
+              }));
+            }
           }
         }
 

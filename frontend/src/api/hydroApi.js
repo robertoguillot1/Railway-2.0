@@ -40,6 +40,8 @@ export const getCropTypes = () => apiFetch('/api/v1/farms/crops/');
 // ─── CORE (Users, RBAC, Audit) ─────────────────────────────────────────────────
 export const getAuditLogs = () => apiFetch('/api/v1/core/audit-logs/').catch(() => []);
 export const getMyResources = () => apiFetch('/api/v1/core/mis-recursos/').catch(() => []);
+export const updateProfile = (data) =>
+  apiFetch('/api/v1/core/me/', { method: 'PATCH', body: JSON.stringify(data) });
 
 // ─── DEVICES (CRUD Completo) ───────────────────────────────────────────────────
 export const getDevices = () => apiFetch('/api/v1/devices/list/');

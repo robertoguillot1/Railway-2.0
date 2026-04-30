@@ -1,21 +1,32 @@
 import { useApp } from '../context/AppContext';
 import { useAuth } from '../context/AuthContext';
 import { useState, useEffect } from 'react';
-import { getIrrigationRules, updateIrrigationRule, createIrrigationRule } from '../api/hydroApi';
+import { 
+  getIrrigationRules, updateIrrigationRule, createIrrigationRule, 
+  updateProfile, deleteFarm, updateFarm 
+} from '../api/hydroApi';
 
 export default function SettingsPage() {
   const { 
     irrigationThreshold, setIrrigationThreshold, 
     stopThreshold, setStopThreshold,
     systemPrefs, updateSystemPrefs,
-    farms, devices
+    farms, setFarms, devices, selectedFarm, setSelectedFarm
   } = useApp();
-  const { user } = useAuth();
+  const { user, login } = useAuth();
   
   const [activeTab, setActiveTab] = useState('automation');
   const [rules, setRules] = useState([]);
   const [loadingRules, setLoadingRules] = useState(false);
   const [showRuleModal, setShowRuleModal] = useState(false);
+  const [showProfileModal, setShowProfileModal] = useState(false);
+  const [loading, setLoading] = useState(false);
+
+  const [profileForm, setProfileForm] = useState({
+    first_name: user?.first_name || '',
+    last_name: user?.last_name || '',
+    email: user?.email || ''
+  });
 
   // Cargar reglas reales
   useEffect(() => {
@@ -37,6 +48,36 @@ export default function SettingsPage() {
     }
   };
 
+  const handleUpdateProfile = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+    try {
+      const updatedUser = await updateProfile(profileForm);
+      // Actualizar el contexto de Auth (si login() maneja la actualización del user)
+      // Dependiendo de cómo esté AuthContext, podríamos necesitar un setAuthUser
+      alert('Perfil actualizado con éxito. Por favor, refresca para ver los cambios.');
+      setShowProfileModal(false);
+    } catch {
+      alert('Error al actualizar perfil');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleDeleteFarm = async (id) => {
+    if (!confirm('¿Seguro que quieres eliminar esta finca? Se borrarán todas sus zonas y dispositivos.')) return;
+    try {
+      await deleteFarm(id);
+      const updatedFarms = farms.filter(f => f.id !== id);
+      setFarms(updatedFarms);
+      if (selectedFarm?.id === id) {
+        setSelectedFarm(updatedFarms[0] || null);
+      }
+    } catch {
+      alert('Error al eliminar finca');
+    }
+  };
+
   return (
     <div className="page-container" style={{ maxWidth: 1000, margin: '0 auto', width: '100%' }}>
       <header style={{ marginBottom: 30 }}>
@@ -50,7 +91,7 @@ export default function SettingsPage() {
 
       {/* Tabs */}
       <div style={{ display: 'flex', gap: 15, marginBottom: 25, borderBottom: '1px solid rgba(255,255,255,0.05)', paddingBottom: 15 }}>
-        {['automation', 'system', 'profile'].map(tab => (
+        {['automation', 'system', 'profile', 'farms'].map(tab => (
           <button
             key={tab}
             onClick={() => setActiveTab(tab)}
@@ -68,7 +109,7 @@ export default function SettingsPage() {
               transition: 'all 0.3s'
             }}
           >
-            {tab === 'automation' ? 'Automatización' : tab === 'system' ? 'Sistema' : 'Perfil'}
+            {tab === 'automation' ? 'Automatización' : tab === 'system' ? 'Sistema' : tab === 'profile' ? 'Perfil' : 'Fincas'}
             {activeTab === tab && (
               <div style={{ position: 'absolute', bottom: -16, left: 0, right: 0, height: 2, background: 'var(--primary)', borderRadius: 2 }} />
             )}
@@ -282,11 +323,77 @@ export default function SettingsPage() {
           </div>
 
           <button 
-            onClick={() => alert('Función de edición de perfil en desarrollo...')}
+            onClick={() => setShowProfileModal(true)}
             className="btn-primary" style={{ maxWidth: 200, margin: '0 auto' }}
           >
             <i className="fas fa-edit" style={{ marginRight: 8 }} /> EDITAR PERFIL
           </button>
+        </div>
+      )}
+
+      {activeTab === 'farms' && (
+        <div className="glass-panel" style={{ padding: 25 }}>
+          <div className="panel-header" style={{ marginBottom: 20 }}>
+            <i className="fas fa-tractor" /> Gestión de Instalaciones
+          </div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+            {farms.map(f => (
+              <div key={f.id} className="actuator-card" style={{ marginBottom: 0 }}>
+                <div>
+                  <div style={{ fontSize: 13, fontWeight: 700 }}>{f.name}</div>
+                  <div style={{ fontSize: 10, color: 'var(--text-dim)' }}>{f.location}</div>
+                </div>
+                <button 
+                  onClick={() => handleDeleteFarm(f.id)}
+                  style={{ background: 'rgba(239,68,68,0.1)', color: '#ef4444', border: 'none', padding: '6px 12px', borderRadius: 8, fontSize: 11, cursor: 'pointer' }}>
+                  <i className="fas fa-trash" />
+                </button>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {showProfileModal && (
+        <div className="modal-overlay">
+          <div className="modal-box" style={{ maxWidth: 450 }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 25 }}>
+              <div style={{ fontWeight: 800, fontSize: '1.2rem', fontFamily: 'Outfit' }}>Editar Perfil</div>
+              <button onClick={() => setShowProfileModal(false)} style={{ background: 'transparent', border: 'none', color: 'var(--text-dim)', cursor: 'pointer', fontSize: 18 }}>
+                <i className="fas fa-times" />
+              </button>
+            </div>
+            <form onSubmit={handleUpdateProfile}>
+              <div style={{ marginBottom: 15 }}>
+                <label style={{ fontSize: 10, fontWeight: 700, color: 'var(--text-dim)', display: 'block', marginBottom: 6 }}>NOMBRE</label>
+                <input 
+                  value={profileForm.first_name}
+                  onChange={e => setProfileForm({...profileForm, first_name: e.target.value})}
+                  style={{ width: '100%', padding: '10px', borderRadius: 8, background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: 'white' }} 
+                />
+              </div>
+              <div style={{ marginBottom: 15 }}>
+                <label style={{ fontSize: 10, fontWeight: 700, color: 'var(--text-dim)', display: 'block', marginBottom: 6 }}>APELLIDO</label>
+                <input 
+                  value={profileForm.last_name}
+                  onChange={e => setProfileForm({...profileForm, last_name: e.target.value})}
+                  style={{ width: '100%', padding: '10px', borderRadius: 8, background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: 'white' }} 
+                />
+              </div>
+              <div style={{ marginBottom: 20 }}>
+                <label style={{ fontSize: 10, fontWeight: 700, color: 'var(--text-dim)', display: 'block', marginBottom: 6 }}>EMAIL</label>
+                <input 
+                  type="email"
+                  value={profileForm.email}
+                  onChange={e => setProfileForm({...profileForm, email: e.target.value})}
+                  style={{ width: '100%', padding: '10px', borderRadius: 8, background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: 'white' }} 
+                />
+              </div>
+              <button type="submit" disabled={loading} className="btn-primary" style={{ width: '100%', padding: '12px' }}>
+                {loading ? 'GUARDANDO...' : 'GUARDAR CAMBIOS'}
+              </button>
+            </form>
+          </div>
         </div>
       )}
     </div>

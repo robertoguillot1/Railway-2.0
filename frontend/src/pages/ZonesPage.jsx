@@ -3,7 +3,7 @@ import { useApp } from '../context/AppContext';
 import { deleteZone, createZone, updateZone, getCropTypes } from '../api/hydroApi';
 import { STAGE_DISPLAY } from '../utils/helpers';
 
-function ZoneCard({ zone, onDelete, onToggle }) {
+function ZoneCard({ zone, onDelete, onToggle, onEdit }) {
   const stage = STAGE_DISPLAY[zone.current_stage] || { label: 'Crecimiento', icon: 'fa-leaf', color: '#10b981' };
   const progress = Math.min((zone.current_day / (zone.crop_type?.duration_days || 30)) * 100, 100);
 
@@ -18,6 +18,13 @@ function ZoneCard({ zone, onDelete, onToggle }) {
             title={zone.active ? 'Desactivar' : 'Activar'}
           >
             <i className={`fas ${zone.active ? 'fa-eye-slash' : 'fa-eye'}`} />
+          </button>
+          <button 
+            onClick={() => onEdit(zone)}
+            style={{ width: 28, height: 28, borderRadius: 8, border: 'none', background: 'rgba(56,189,248,0.1)', color: '#38bdf8', cursor: 'pointer', fontSize: 10 }}
+            title="Editar"
+          >
+            <i className="fas fa-edit" />
           </button>
           <button 
             onClick={() => { if(confirm('¿Eliminar este módulo definitivamente?')) onDelete(zone.id) }}
@@ -82,6 +89,7 @@ function ZoneCard({ zone, onDelete, onToggle }) {
 export default function ZonesPage() {
   const { zones, setZones, addLog, farms, selectedFarm } = useApp();
   const [showModal, setShowModal] = useState(false);
+  const [editingZone, setEditingZone] = useState(null);
   const [loading, setLoading] = useState(false);
   const [cropTypes, setCropTypes] = useState([]);
   const [form, setForm] = useState({
@@ -120,6 +128,25 @@ export default function ZonesPage() {
       setForm({ name: '', crop_type: '', start_date: new Date().toISOString().split('T')[0] });
     } catch (err) {
       alert('Error al crear módulo. Verifica la conexión.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleUpdateZone = async (e) => {
+    e.preventDefault();
+    try {
+      setLoading(true);
+      const updated = await updateZone(editingZone.id, {
+        name: editingZone.name,
+        crop_type: editingZone.crop_type?.id || editingZone.crop_type,
+        start_date: editingZone.start_date
+      });
+      setZones(prev => prev.map(z => z.id === editingZone.id ? updated : z));
+      setEditingZone(null);
+      addLog(`✅ NUBE: Módulo "${editingZone.name}" actualizado.`);
+    } catch {
+      alert('Error al actualizar módulo.');
     } finally {
       setLoading(false);
     }
@@ -226,6 +253,60 @@ export default function ZonesPage() {
         </div>
       )}
 
+      {editingZone && (
+        <div className="modal-overlay">
+          <div className="modal-box" style={{ maxWidth: 450 }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 25 }}>
+              <div style={{ fontWeight: 800, fontSize: '1.2rem', fontFamily: 'Outfit' }}>Editar Módulo</div>
+              <button onClick={() => setEditingZone(null)} style={{ background: 'transparent', border: 'none', color: 'var(--text-dim)', cursor: 'pointer', fontSize: 18 }}>
+                <i className="fas fa-times" />
+              </button>
+            </div>
+
+            <form onSubmit={handleUpdateZone}>
+              <div style={{ marginBottom: 18 }}>
+                <label style={{ fontSize: 10, fontWeight: 700, color: 'var(--text-dim)', letterSpacing: 1, display: 'block', marginBottom: 8 }}>NOMBRE DEL MÓDULO</label>
+                <input 
+                  type="text" required
+                  value={editingZone.name}
+                  onChange={e => setEditingZone({...editingZone, name: e.target.value})}
+                  style={{ width: '100%', padding: '12px', borderRadius: 10, background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: 'white' }}
+                />
+              </div>
+
+              <div style={{ marginBottom: 18 }}>
+                <label style={{ fontSize: 10, fontWeight: 700, color: 'var(--text-dim)', letterSpacing: 1, display: 'block', marginBottom: 8 }}>TIPO DE CULTIVO</label>
+                <select 
+                  required
+                  value={editingZone.crop_type?.id || editingZone.crop_type}
+                  onChange={e => setEditingZone({...editingZone, crop_type: e.target.value})}
+                  style={{ width: '100%', padding: '12px', borderRadius: 10, background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: 'white' }}
+                >
+                  {cropTypes.map(c => <option key={c.id} value={c.id} style={{ background: '#0f172a' }}>{c.name}</option>)}
+                </select>
+              </div>
+
+              <div style={{ marginBottom: 25 }}>
+                <label style={{ fontSize: 10, fontWeight: 700, color: 'var(--text-dim)', letterSpacing: 1, display: 'block', marginBottom: 8 }}>FECHA DE INICIO</label>
+                <input 
+                  type="date" required
+                  value={editingZone.start_date}
+                  onChange={e => setEditingZone({...editingZone, start_date: e.target.value})}
+                  style={{ width: '100%', padding: '12px', borderRadius: 10, background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: 'white' }}
+                />
+              </div>
+
+              <button 
+                type="submit" disabled={loading}
+                style={{ width: '100%', padding: '14px', borderRadius: 12, background: 'var(--primary)', border: 'none', color: '#0f1520', fontWeight: 800, cursor: 'pointer' }}
+              >
+                {loading ? 'GUARDANDO...' : 'GUARDAR CAMBIOS'}
+              </button>
+            </form>
+          </div>
+        </div>
+      )}
+
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(340px, 1fr))', gap: 18 }}>
         {zones.length === 0 ? (
           <div style={{ gridColumn: '1/-1', color: 'var(--text-dim)', textAlign: 'center', padding: '60px', background: 'rgba(255,255,255,0.02)', borderRadius: 20, border: '1px dashed rgba(255,255,255,0.1)' }}>
@@ -239,6 +320,7 @@ export default function ZonesPage() {
               zone={zone} 
               onDelete={handleDelete}
               onToggle={handleToggle}
+              onEdit={setEditingZone}
             />
           ))
         )}
