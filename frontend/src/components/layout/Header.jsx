@@ -10,9 +10,9 @@ export default function Header() {
   } = useApp();
   const [time, setTime] = useState(formatTime());
 
-  // Páginas que son globales y NO necesitan selector de finca
-  const GLOBAL_PAGES = ['users', 'rbac', 'logs'];
-  const showFarmSelector = !GLOBAL_PAGES.includes(activePage);
+  // Páginas donde es relevante seleccionar la finca
+  const FARM_PAGES = ['dashboard', 'zones', 'devices', 'alerts', 'analytics'];
+  const showFarmSelector = FARM_PAGES.includes(activePage);
 
   useEffect(() => {
     const t = setInterval(() => setTime(formatTime()), 1000);
