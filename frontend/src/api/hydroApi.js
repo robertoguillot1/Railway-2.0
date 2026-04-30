@@ -11,9 +11,11 @@ function apiFetch(path, options = {}) {
   return fetch(`${BASE_URL}${path}`, {
     headers: { ...headers, ...options.headers },
     ...options,
-  }).then(res => {
+  }).then(async res => {
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    return res.json();
+    // Si no hay contenido (como en un DELETE 204), no intentamos parsear JSON
+    const text = await res.text();
+    return text ? JSON.parse(text) : {};
   });
 }
 
