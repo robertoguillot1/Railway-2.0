@@ -36,9 +36,9 @@ export default function AuditLogsPage() {
   }, []);
 
   const filteredLogs = logs.filter(log => 
-    log.usuario_username?.toLowerCase().includes(filter.toLowerCase()) ||
-    log.accion?.toLowerCase().includes(filter.toLowerCase()) ||
-    log.descripcion?.toLowerCase().includes(filter.toLowerCase())
+    log.username?.toLowerCase().includes(filter.toLowerCase()) ||
+    log.action?.toLowerCase().includes(filter.toLowerCase()) ||
+    log.description?.toLowerCase().includes(filter.toLowerCase())
   );
 
   return (
@@ -102,25 +102,26 @@ export default function AuditLogsPage() {
                   {filteredLogs.map((log, i) => {
                     // Intentar adivinar el tipo de acción para el color
                     let type = 'SYSTEM';
-                    if (log.accion.includes('CREATE') || log.accion.includes('POST')) type = 'CREATE';
-                    if (log.accion.includes('UPDATE') || log.accion.includes('PATCH') || log.accion.includes('PUT')) type = 'UPDATE';
-                    if (log.accion.includes('DELETE')) type = 'DELETE';
-                    if (log.accion.includes('LOGIN')) type = 'LOGIN';
+                    const act = (log.action || '').toUpperCase();
+                    if (act.includes('CREATE') || act.includes('POST')) type = 'CREATE';
+                    if (act.includes('UPDATE') || act.includes('PATCH') || act.includes('PUT')) type = 'UPDATE';
+                    if (act.includes('DELETE')) type = 'DELETE';
+                    if (act.includes('LOGIN')) type = 'LOGIN';
                     
                     const style = ACTION_COLORS[type];
 
                     return (
                       <tr key={log.id || i} style={{ borderBottom: '1px solid rgba(255,255,255,0.04)', transition: 'background 0.2s' }} className="table-row-hover">
                         <td style={{ padding: '15px 20px', whiteSpace: 'nowrap' }}>
-                          <div style={{ fontWeight: 600 }}>{new Date(log.timestamp).toLocaleDateString()}</div>
-                          <div style={{ fontSize: 11, color: 'var(--text-dim)' }}>{new Date(log.timestamp).toLocaleTimeString()}</div>
+                          <div style={{ fontWeight: 600 }}>{new Date(log.created_at).toLocaleDateString()}</div>
+                          <div style={{ fontSize: 11, color: 'var(--text-dim)' }}>{new Date(log.created_at).toLocaleTimeString()}</div>
                         </td>
                         <td style={{ padding: '15px 20px' }}>
                           <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                             <div style={{ width: 30, height: 30, borderRadius: 8, background: 'rgba(99,102,241,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, color: '#818cf8' }}>
                               <i className="fas fa-user" />
                             </div>
-                            <span style={{ fontWeight: 700 }}>{log.usuario_username || 'Sistema'}</span>
+                            <span style={{ fontWeight: 700 }}>{log.username || 'Sistema'}</span>
                           </div>
                         </td>
                         <td style={{ padding: '15px 20px' }}>
@@ -137,10 +138,10 @@ export default function AuditLogsPage() {
                           </span>
                         </td>
                         <td style={{ padding: '15px 20px', color: 'var(--text-dim)', fontSize: 12, lineHeight: 1.4 }}>
-                          {log.descripcion}
+                          {log.action} en {log.model_name} (ID: {log.object_id})
                         </td>
                         <td style={{ padding: '15px 20px', fontFamily: 'monospace', color: '#64748b', fontSize: 11 }}>
-                          {log.ip_address || '127.0.0.1'}
+                          {log.ip_address || '—'}
                         </td>
                       </tr>
                     );

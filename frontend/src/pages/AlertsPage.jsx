@@ -107,10 +107,10 @@ export default function AlertsPage() {
             onChange={(e) => setFilter(e.target.value)}
             style={{ padding: '8px 12px', borderRadius: 10, background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: 'white', fontSize: 11, fontWeight: 700, cursor: 'pointer' }}
           >
-            <option value="ALL">TODAS LAS SEVERIDADES</option>
-            <option value="CRITICAL">SOLO CRÍTICAS</option>
-            <option value="WARNING">ADVERTENCIAS</option>
-            <option value="INFO">INFORMATIVAS</option>
+            <option value="ALL" style={{ background: '#1a2235', color: 'white' }}>TODAS LAS SEVERIDADES</option>
+            <option value="CRITICAL" style={{ background: '#1a2235', color: 'white' }}>SOLO CRÍTICAS</option>
+            <option value="WARNING" style={{ background: '#1a2235', color: 'white' }}>ADVERTENCIAS</option>
+            <option value="INFO" style={{ background: '#1a2235', color: 'white' }}>INFORMATIVAS</option>
           </select>
           <button
             onClick={() => setShowAcknowledged(!showAcknowledged)}
