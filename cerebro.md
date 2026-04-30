@@ -547,4 +547,33 @@ Se implementó la visualización de datos reales de sensores en los gráficos de
 
 ---
 
-*Documento actualizado - Proyecto HydroSmart Pro - Analítica Operativa*
+---
+
+## Cambio 8: Trazabilidad Administrativa (Audit Logs)
+
+### Fecha: 2026-04-30
+
+### Resumen
+Se implementó una nueva página de "Trazabilidad" para administradores que permite auditar todas las acciones críticas del sistema, garantizando la transparencia y seguridad de la plataforma.
+
+### Cambios Realizados:
+1. **Nueva Página `AuditLogsPage.jsx`**:
+   - Visualización tabular de registros: Fecha, Usuario, Acción, Descripción e IP.
+   - Buscador en tiempo real para filtrar por cualquier campo.
+   - Sistema de badges de colores según el tipo de operación (Creación, Edición, Borrado, Login).
+2. **Navegación Administrativa**:
+   - Agregado el ícono de historial en el Sidebar (solo para administradores).
+   - Registro de ruta en `App.jsx`.
+3. **Consumo de API**:
+   - Integración con el endpoint `/api/v1/core/audit-logs/`.
+   - Manejo de estados de carga y búsqueda vacía.
+
+### Archivos Modificados:
+- `AuditLogsPage.jsx` (NUEVO)
+- `Sidebar.jsx`: Nuevo ítem de navegación.
+- `App.jsx`: Registro de componente.
+- `hydroApi.js`: Verificación de endpoint.
+
+---
+
+*Documento actualizado - Proyecto HydroSmart Pro - Trazabilidad Operativa*

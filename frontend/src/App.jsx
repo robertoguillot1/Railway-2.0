@@ -19,6 +19,7 @@ import SettingsPage from './pages/SettingsPage';
 import UsersPage from './pages/UsersPage';
 import RbacPage from './pages/RbacPage';
 import OnboardingPage from './pages/OnboardingPage';
+import AuditLogsPage from './pages/AuditLogsPage';
 
 function PageContent() {
   const { activePage } = useApp();
@@ -35,6 +36,7 @@ function PageContent() {
     ...(isAdmin && { 
       users: <UsersPage />,
       rbac: <RbacPage />,
+      logs: <AuditLogsPage />,
     }),
   };
 
