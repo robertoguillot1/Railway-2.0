@@ -27,7 +27,15 @@ export default function ControlPanel() {
     addLog('🌐 RED: Contactando backend en Railway...');
     try {
       const url = import.meta.env.VITE_API_URL || 'https://railway-20-production-7eaa.up.railway.app';
-      const res = await fetch(`${url}/api/v1/automation/readings/?limit=1`, { signal: AbortSignal.timeout(6000) });
+      const token = localStorage.getItem('hydro_token');
+      const headers = { 'Content-Type': 'application/json' };
+      if (token) headers['Authorization'] = `Bearer ${token}`;
+
+      const res = await fetch(`${url}/api/v1/automation/readings/?limit=1`, { 
+        headers,
+        signal: AbortSignal.timeout(6000) 
+      });
+
       if (res.ok) {
         setIsConnected(true);
         setConnectionMode('cloud');
@@ -35,7 +43,10 @@ export default function ControlPanel() {
         startCloudPolling();
       } else {
         // Intentar endpoint legacy
-        const res2 = await fetch(`${url}/api/telemetria/historial`, { signal: AbortSignal.timeout(4000) });
+        const res2 = await fetch(`${url}/api/telemetria/`, { 
+          headers,
+          signal: AbortSignal.timeout(4000) 
+        });
         if (res2.ok) {
           setIsConnected(true);
           setConnectionMode('cloud');
@@ -43,7 +54,7 @@ export default function ControlPanel() {
           startCloudPolling();
         } else throw new Error('Sin respuesta');
       }
-    } catch {
+    } catch (err) {
       addLog('❌ RED: No se pudo conectar con la base de datos en Railway.');
       setIsConnected(false);
     } finally {
