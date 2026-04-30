@@ -517,4 +517,34 @@ Se completó el último módulo crítico pendiente del plan de correcciones. `De
 
 ---
 
-*Documento actualizado - Proyecto HydroSmart Pro - Plan Final Generado*
+---
+
+## Cambio 7: Analítica de Sensores con Datos Reales
+
+### Fecha: 2026-04-30
+
+### Resumen
+Se implementó la visualización de datos reales de sensores en los gráficos del Dashboard, con selector de rango de tiempo (24H/7D/30D), eliminando definitivamente los datos estáticos del panel de análisis.
+
+### Cambios Realizados:
+1. **Selector de Rango Pro**:
+   - Implementado control para conmutar entre 24 horas, 7 días y 30 días.
+   - Ajuste dinámico del `limit` de la API según el período seleccionado.
+2. **Gráficos de Área Multi-Sensor**:
+   - Temperatura del Aire (`AIR_TEMP`)
+   - Temperatura del Agua (`WATER_TEMP`)
+   - Humedad Ambiental (`HUMIDITY`)
+   - Humedad del Suelo (`SOIL_MOISTURE`)
+   - Nivel del Tanque (`WATER_LEVEL`)
+3. **Optimización de Datos**:
+   - Procesamiento de lecturas con inversión de orden para visualización cronológica correcta.
+   - Formateo de tiempo automático (HH:mm).
+   - Auto-refresco de datos cada 30 segundos.
+
+### Archivos Modificados:
+- `AnalyticsPanel.jsx`: Rediseño total con `AreaChart` de Recharts y lógica de API.
+- `hydroApi.js`: Verificación de endpoints de automatización.
+
+---
+
+*Documento actualizado - Proyecto HydroSmart Pro - Analítica Operativa*

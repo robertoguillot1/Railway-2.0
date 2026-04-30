@@ -1,111 +1,175 @@
 // src/components/panels/AnalyticsPanel.jsx
-// Gráfico de líneas interactivo con Recharts — Histórico de sensores
+// Panel de analítica avanzada con gráficos reales y selectores de tiempo
 
-import { useState } from 'react';
-import {
-  LineChart, Line, XAxis, YAxis, CartesianGrid,
-  Tooltip, ResponsiveContainer, Legend
+import { useState, useEffect } from 'react';
+import { getSensorReadings } from '../../api/hydroApi';
+import { 
+  LineChart, Line, XAxis, YAxis, CartesianGrid, 
+  Tooltip, ResponsiveContainer, AreaChart, Area 
 } from 'recharts';
-import { useApp } from '../../context/AppContext';
 
-const SENSORS = [
-  { key: 'humidity', label: 'Humedad %', color: '#10b981', unit: '%' },
-  { key: 'temperature', label: 'Temperatura °C', color: '#f59e0b', unit: '°C' },
-  { key: 'ph', label: 'pH', color: '#8b5cf6', unit: '' },
-  { key: 'ec', label: 'EC (mS)', color: '#38bdf8', unit: ' mS' },
-];
-
-const CustomTooltip = ({ active, payload }) => {
-  if (!active || !payload?.length) return null;
-  return (
-    <div style={{ background: '#1a2235', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 10, padding: '10px 14px', fontSize: 11 }}>
-      {payload.map(p => (
-        <div key={p.dataKey} style={{ color: p.color, marginBottom: 3 }}>
-          {p.name}: <b>{p.value}</b>
-        </div>
-      ))}
-    </div>
-  );
+const getLimitForRange = (range) => {
+  switch(range) {
+    case '24H': return 50;    
+    case '7D': return 500;    
+    case '30D': return 2000;  
+    default: return 50;
+  }
 };
 
+const SensorChart = ({ title, data, color, unit }) => (
+  <div className="glass-panel" style={{ minHeight: 280 }}>
+    <div className="panel-inner" style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
+      <h3 style={{ fontSize: 12, fontWeight: 800, color: 'var(--text-dim)', marginBottom: 15, letterSpacing: 0.5, display: 'flex', alignItems: 'center', gap: 8 }}>
+        <span style={{ width: 8, height: 8, borderRadius: '50%', background: color }} />
+        {title.toUpperCase()}
+      </h3>
+      
+      {data.length === 0 ? (
+        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', opacity: 0.4 }}>
+          <i className="fas fa-chart-line" style={{ fontSize: 24, marginBottom: 10 }} />
+          <span style={{ fontSize: 10 }}>Sin datos en este periodo</span>
+        </div>
+      ) : (
+        <div style={{ flex: 1, width: '100%', minHeight: 200 }}>
+          <ResponsiveContainer width="100%" height="100%">
+            <AreaChart data={data}>
+              <defs>
+                <linearGradient id={`color-${unit}`} x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="5%" stopColor={color} stopOpacity={0.3}/>
+                  <stop offset="95%" stopColor={color} stopOpacity={0}/>
+                </linearGradient>
+              </defs>
+              <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.03)" vertical={false} />
+              <XAxis 
+                dataKey="time" 
+                stroke="rgba(255,255,255,0.2)" 
+                fontSize={9} 
+                tickLine={false} 
+                axisLine={false}
+                interval="preserveStartEnd"
+              />
+              <YAxis 
+                stroke="rgba(255,255,255,0.2)" 
+                fontSize={9} 
+                tickLine={false} 
+                axisLine={false}
+                unit={unit}
+              />
+              <Tooltip 
+                contentStyle={{ background: '#0f172a', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 10, fontSize: 11 }}
+                itemStyle={{ color: color }}
+              />
+              <Area 
+                type="monotone" 
+                dataKey="value" 
+                stroke={color} 
+                fillOpacity={1} 
+                fill={`url(#color-${unit})`} 
+                strokeWidth={2}
+                animationDuration={1000}
+              />
+            </AreaChart>
+          </ResponsiveContainer>
+        </div>
+      )}
+    </div>
+  </div>
+);
+
 export default function AnalyticsPanel() {
-  const { sensorHistory } = useApp();
-  const [active, setActive] = useState(['humidity', 'temperature']);
+  const [timeRange, setTimeRange] = useState('24H');
+  const [sensorData, setSensorData] = useState({
+    air_temp: [],
+    water_temp: [],
+    humidity: [],
+    soil_moisture: [],
+    water_level: []
+  });
+  const [loading, setLoading] = useState(true);
 
-  const data = sensorHistory.humidity.map((_, i) => ({
-    name: i,
-    humidity: sensorHistory.humidity[i],
-    temperature: sensorHistory.temperature[i],
-    ph: sensorHistory.ph[i],
-    ec: sensorHistory.ec[i],
-  }));
+  useEffect(() => {
+    const fetchData = async () => {
+      setLoading(true);
+      try {
+        const limit = getLimitForRange(timeRange);
+        const readings = await getSensorReadings(null, limit);
+        
+        const process = (type) => readings
+          .filter(r => r.sensor_type === type)
+          .map(r => ({
+            time: new Date(r.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+            value: parseFloat(r.value)
+          })).reverse();
 
-  const toggleSensor = (key) => {
-    setActive(prev => prev.includes(key) ? prev.filter(k => k !== key) : [...prev, key]);
-  };
+        setSensorData({
+          air_temp: process('AIR_TEMP'),
+          water_temp: process('WATER_TEMP'),
+          humidity: process('HUMIDITY'),
+          soil_moisture: process('SOIL_MOISTURE'),
+          water_level: process('WATER_LEVEL')
+        });
+      } catch (err) {
+        console.error('[HYDRO] Error fetching sensor data:', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    
+    fetchData();
+    const interval = setInterval(fetchData, 30000); // Actualizar cada 30s
+    return () => clearInterval(interval);
+  }, [timeRange]);
 
   return (
-    <div id="analytics-container" className="glass-panel" style={{ height: '100%' }}>
-      <div className="panel-top-bar" style={{ padding: '16px 18px 0', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-        <div className="panel-header" style={{ marginBottom: 0, whiteSpace: 'nowrap' }}>
-          <i className="fas fa-chart-area" />
-          Analítica — Histórico
+    <div style={{ marginTop: 25 }}>
+      {/* Header con Selector */}
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20, flexWrap: 'wrap', gap: 15 }}>
+        <div>
+          <h2 style={{ fontFamily: 'Outfit', fontSize: '1.4rem', fontWeight: 800, letterSpacing: '-0.5px' }}>
+            📊 Analítica Detallada
+          </h2>
+          <p style={{ fontSize: 12, color: 'var(--text-dim)' }}>Tendencias históricas de los sensores vinculados.</p>
         </div>
-        <div style={{ 
-          display: 'flex', 
-          gap: 6, 
-          overflowX: 'auto', 
-          maxWidth: '100%',
-          paddingBottom: '4px',
-          scrollbarWidth: 'none'
-        }}>
-          {SENSORS.map(s => (
+        
+        <div style={{ display: 'flex', background: 'rgba(255,255,255,0.03)', padding: 4, borderRadius: 12, border: '1px solid rgba(255,255,255,0.05)' }}>
+          {['24H', '7D', '30D'].map(range => (
             <button
-              key={s.key}
-              id={`chart-toggle-${s.key}`}
-              onClick={() => toggleSensor(s.key)}
+              key={range}
+              onClick={() => setTimeRange(range)}
               style={{
-                border: `1px solid ${active.includes(s.key) ? s.color : 'rgba(255,255,255,0.06)'}`,
-                borderRadius: 7,
-                padding: '4px 8px',
-                fontSize: 9,
-                fontWeight: 700,
+                padding: '8px 16px',
+                borderRadius: 10,
+                border: 'none',
+                background: timeRange === range ? 'var(--primary)' : 'transparent',
+                color: timeRange === range ? '#0f172a' : 'var(--text-dim)',
+                fontWeight: 800,
+                fontSize: 11,
                 cursor: 'pointer',
-                background: active.includes(s.key) ? `${s.color}22` : 'transparent',
-                color: active.includes(s.key) ? s.color : 'var(--text-dim)',
-                letterSpacing: 0.5,
-                transition: 'all 0.2s',
-                whiteSpace: 'nowrap'
+                transition: 'all 0.3s',
+                fontFamily: 'Outfit'
               }}
             >
-              {s.label.split(' ')[0]}
+              {range}
             </button>
           ))}
         </div>
       </div>
-      <div style={{ flex: 1, padding: '10px 8px 12px' }}>
-        <ResponsiveContainer width="100%" height={175}>
-          <LineChart data={data} margin={{ top: 5, right: 5, left: -30, bottom: 0 }}>
-            <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.04)" />
-            <XAxis dataKey="name" tick={false} axisLine={false} />
-            <YAxis tick={{ fontSize: 9, fill: '#64748b' }} axisLine={false} tickLine={false} />
-            <Tooltip content={<CustomTooltip />} />
-            {SENSORS.filter(s => active.includes(s.key)).map(s => (
-              <Line
-                key={s.key}
-                type="monotone"
-                dataKey={s.key}
-                name={s.label}
-                stroke={s.color}
-                strokeWidth={2}
-                dot={false}
-                activeDot={{ r: 4, fill: s.color }}
-                isAnimationActive={false}
-              />
-            ))}
-          </LineChart>
-        </ResponsiveContainer>
-      </div>
+
+      {loading && sensorData.air_temp.length === 0 ? (
+        <div style={{ textAlign: 'center', padding: '100px 0', color: 'var(--text-dim)' }}>
+          <i className="fas fa-circle-notch fa-spin" style={{ fontSize: 30, marginBottom: 15 }} />
+          <p style={{ fontSize: 13, fontWeight: 600 }}>Sincronizando con la nube...</p>
+        </div>
+      ) : (
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: 20 }}>
+          <SensorChart title="Temperatura Aire" data={sensorData.air_temp} color="#ef4444" unit="°C" />
+          <SensorChart title="Temperatura Agua" data={sensorData.water_temp} color="#f59e0b" unit="°C" />
+          <SensorChart title="Humedad Ambiente" data={sensorData.humidity} color="#6366f1" unit="%" />
+          <SensorChart title="Humedad Suelo" data={sensorData.soil_moisture} color="#10b981" unit="%" />
+          <SensorChart title="Nivel Tanque" data={sensorData.water_level} color="#38bdf8" unit="%" />
+        </div>
+      )}
     </div>
   );
 }
