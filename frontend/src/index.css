@@ -632,4 +632,36 @@ body {
 
   #scene-container { height: 260px !important; }
   #analytics-container { height: auto !important; }
+
+  /* Mobile-specific table handling */
+  table {
+    display: block;
+    width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  /* Form and Input optimizations */
+  input, select, button {
+    font-size: 14px !important; /* Prevent iOS zoom */
+  }
+
+  /* Modal responsiveness */
+  .modal-box {
+    padding: 20px;
+    margin: 10px;
+    width: calc(100% - 20px);
+  }
+
+  /* Card Grid optimizations */
+  .devices-grid, .farms-grid {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+@media (max-width: 480px) {
+  .header-title { font-size: 1.1rem !important; }
+  .btn-primary { padding: 12px; }
+  .panel-header { font-size: 0.75rem; }
+  .mini-card-value { font-size: 15px; }
 }

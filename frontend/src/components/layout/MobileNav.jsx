@@ -8,13 +8,14 @@ export default function MobileNav() {
 
   const items = [
     { id: 'dashboard', icon: 'fa-th-large' },
-    { id: 'zones', icon: 'fa-layer-group' },
     { id: 'devices', icon: 'fa-microchip' },
+    { id: 'analytics', icon: 'fa-chart-line' },
     { id: 'alerts', icon: 'fa-bell' },
+    { id: 'settings', icon: 'fa-cog' },
   ];
 
   if (isAdmin) {
-    items.push({ id: 'users', icon: 'fa-users-cog' });
+    items.push({ id: 'logs', icon: 'fa-history' });
   }
 
   return (
