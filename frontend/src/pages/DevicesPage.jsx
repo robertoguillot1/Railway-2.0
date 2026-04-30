@@ -1,33 +1,9 @@
 // src/pages/DevicesPage.jsx
 // Vista de dispositivos IoT y sensores registrados en la base de datos
 
+import { useState } from 'react';
 import { useApp } from '../context/AppContext';
-
-const MOCK_DEVICES = [
-  {
-    id: 1, device_id: 'HYDRO-001', name: 'Controlador Principal', firmware_version: '2.1.4', active: true,
-    sensors: [
-      { id: 1, name: 'Sensor pH', sensor_type: 'PH', unit: 'pH', pin: 'A0', active: true },
-      { id: 2, name: 'Sensor EC', sensor_type: 'EC', unit: 'mS/cm', pin: 'A1', active: true },
-      { id: 3, name: 'Temp. Agua', sensor_type: 'WATER_TEMP', unit: '°C', pin: 'GPIO4', active: true },
-    ],
-    actuators: [
-      { id: 1, name: 'Bomba de Riego', actuator_type: 'PUMP', pin: 'GPIO26', state: false },
-      { id: 2, name: 'Oxigenador', actuator_type: 'OXYGENATOR', pin: 'GPIO27', state: true },
-    ]
-  },
-  {
-    id: 2, device_id: 'HYDRO-002', name: 'Módulo Ambiental', firmware_version: '1.8.0', active: true,
-    sensors: [
-      { id: 4, name: 'Temp. Ambiente', sensor_type: 'AIR_TEMP', unit: '°C', pin: 'GPIO14', active: true },
-      { id: 5, name: 'Humedad Ambiente', sensor_type: 'HUMIDITY', unit: '%', pin: 'GPIO15', active: true },
-      { id: 6, name: 'Nivel Tanque', sensor_type: 'WATER_LEVEL', unit: '%', pin: 'GPIO16', active: false },
-    ],
-    actuators: [
-      { id: 3, name: 'Dosificador Nutes', actuator_type: 'DOSER', pin: 'GPIO28', state: false },
-    ]
-  }
-];
+import { createDevice, updateDevice, deleteDevice } from '../api/hydroApi';
 
 const SENSOR_ICONS = {
   PH: { icon: 'fa-flask', color: '#8b5cf6', bg: 'rgba(139,92,246,0.12)' },
@@ -45,7 +21,7 @@ const ACTUATOR_ICONS = {
   FAN: { icon: 'fa-fan', color: '#f59e0b' },
 };
 
-function DeviceCard({ device }) {
+function DeviceCard({ device, onEdit, onDelete }) {
   const si = device.sensors || [];
   const ai = device.actuators || [];
 
@@ -71,12 +47,21 @@ function DeviceCard({ device }) {
               </div>
             </div>
           </div>
-          <div style={{ display: 'flex', gap: 8, flexDirection: 'column', alignItems: 'flex-end' }}>
-            <span className={`badge ${device.active ? 'badge-ok' : 'badge-danger'}`}>
+          <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+            <button onClick={() => onEdit(device)} style={{ background: 'rgba(56,189,248,0.1)', color: '#38bdf8', border: 'none', padding: '6px 10px', borderRadius: 8, cursor: 'pointer', fontSize: 11 }}>
+              <i className="fas fa-edit" />
+            </button>
+            <button onClick={() => onDelete(device.id)} style={{ background: 'rgba(239,68,68,0.1)', color: '#ef4444', border: 'none', padding: '6px 10px', borderRadius: 8, cursor: 'pointer', fontSize: 11 }}>
+              <i className="fas fa-trash" />
+            </button>
+          </div>
+        </div>
+
+        <div style={{ marginBottom: 15, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+           <span className={`badge ${device.active ? 'badge-ok' : 'badge-danger'}`}>
               {device.active ? 'ONLINE' : 'OFFLINE'}
             </span>
-            <span style={{ fontSize: 10, color: 'var(--text-dim)' }}>FW v{device.firmware_version}</span>
-          </div>
+            <span style={{ fontSize: 10, color: 'var(--text-dim)' }}>FW v{device.firmware_version || '1.0.0'}</span>
         </div>
 
         {/* Sensors */}
@@ -146,27 +131,141 @@ function DeviceCard({ device }) {
 }
 
 export default function DevicesPage() {
-  const { devices } = useApp();
+  const { devices, selectedFarm, zones } = useApp();
+  const [showModal, setShowModal] = useState(false);
+  const [editingDevice, setEditingDevice] = useState(null);
+  const [loading, setLoading] = useState(false);
+
+  const handleDelete = async (id) => {
+    if (!confirm('¿Seguro que deseas eliminar este dispositivo?')) return;
+    try {
+      await deleteDevice(id);
+      alert('Dispositivo eliminado');
+    } catch {
+      alert('Error al eliminar dispositivo');
+    }
+  };
+
+  const handleSave = async (e) => {
+    e.preventDefault();
+    const fd = new FormData(e.target);
+    const data = {
+      name: fd.get('name'),
+      device_id: fd.get('device_id'),
+      farm: selectedFarm?.id,
+      zone: fd.get('zone') ? parseInt(fd.get('zone')) : null,
+      active: true
+    };
+
+    setLoading(true);
+    try {
+      if (editingDevice) {
+        await updateDevice(editingDevice.id, data);
+      } else {
+        await createDevice(data);
+      }
+      setShowModal(false);
+      setEditingDevice(null);
+    } catch {
+      alert('Error al guardar dispositivo');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <div>
-      <div style={{ marginBottom: 24 }}>
-        <h1 style={{ fontFamily: 'Outfit', fontSize: '1.4rem', fontWeight: 700, marginBottom: 6 }}>
-          Dispositivos IoT
-        </h1>
-        <p style={{ color: 'var(--text-dim)', fontSize: 13 }}>
-          Controladores ESP32, sensores y actuadores registrados en la base de datos.
-        </p>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
+        <div>
+          <h1 style={{ fontFamily: 'Outfit', fontSize: '1.8rem', fontWeight: 800, marginBottom: 6, letterSpacing: '-0.5px' }}>
+            Dispositivos IoT
+          </h1>
+          <p style={{ color: 'var(--text-dim)', fontSize: 13 }}>
+            Controladores ESP32, sensores y actuadores registrados en {selectedFarm?.name || 'la base de datos'}.
+          </p>
+        </div>
+        <button 
+          onClick={() => { setEditingDevice(null); setShowModal(true); }}
+          className="btn-primary" 
+          style={{ padding: '10px 20px', borderRadius: 12, fontWeight: 800 }}
+        >
+          <i className="fas fa-plus" style={{ marginRight: 8 }} /> NUEVO ESP32
+        </button>
       </div>
+
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(400px, 1fr))', gap: 18 }}>
         {devices.length === 0 ? (
-          <div style={{ color: 'var(--text-dim)', textAlign: 'center', padding: '40px' }}>
-            No hay dispositivos registrados en la nube.
+          <div style={{ color: 'var(--text-dim)', textAlign: 'center', padding: '60px', background: 'rgba(255,255,255,0.02)', borderRadius: 20, border: '1px solid rgba(255,255,255,0.05)', gridColumn: '1 / -1' }}>
+            <i className="fas fa-microchip" style={{ fontSize: 40, marginBottom: 20, opacity: 0.2 }} />
+            <p>No hay dispositivos registrados en esta finca.</p>
           </div>
         ) : (
-          devices.map(d => <DeviceCard key={d.id} device={d} />)
+          devices.map(d => (
+            <DeviceCard 
+              key={d.id} 
+              device={d} 
+              onEdit={(dev) => { setEditingDevice(dev); setShowModal(true); }}
+              onDelete={handleDelete}
+            />
+          ))
         )}
       </div>
+
+      {showModal && (
+        <div className="modal-overlay">
+          <div className="modal-box" style={{ maxWidth: 450 }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 25 }}>
+              <div style={{ fontWeight: 800, fontSize: '1.2rem', fontFamily: 'Outfit' }}>
+                {editingDevice ? 'Editar Dispositivo' : 'Nuevo Dispositivo ESP32'}
+              </div>
+              <button onClick={() => setShowModal(false)} style={{ background: 'transparent', border: 'none', color: 'var(--text-dim)', cursor: 'pointer', fontSize: 18 }}>
+                <i className="fas fa-times" />
+              </button>
+            </div>
+            
+            <form onSubmit={handleSave}>
+              <div style={{ marginBottom: 18 }}>
+                <label style={{ fontSize: 10, fontWeight: 700, color: 'var(--text-dim)', display: 'block', marginBottom: 8, letterSpacing: 1 }}>NOMBRE DEL DISPOSITIVO</label>
+                <input 
+                  name="name" 
+                  defaultValue={editingDevice?.name || ''} 
+                  required 
+                  placeholder="Ej: Controlador Principal" 
+                  style={{ width: '100%', padding: '12px', borderRadius: 10, background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: 'white', fontSize: 13 }} 
+                />
+              </div>
+
+              <div style={{ marginBottom: 18 }}>
+                <label style={{ fontSize: 10, fontWeight: 700, color: 'var(--text-dim)', display: 'block', marginBottom: 8, letterSpacing: 1 }}>ID DEL DISPOSITIVO (FIRMWARE)</label>
+                <input 
+                  name="device_id" 
+                  defaultValue={editingDevice?.device_id || ''} 
+                  required 
+                  placeholder="Ej: HYDRO-ESP32-01" 
+                  style={{ width: '100%', padding: '12px', borderRadius: 10, background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: 'white', fontSize: 13 }} 
+                />
+              </div>
+
+              <div style={{ marginBottom: 25 }}>
+                <label style={{ fontSize: 10, fontWeight: 700, color: 'var(--text-dim)', display: 'block', marginBottom: 8, letterSpacing: 1 }}>ASIGNAR A MÓDULO (OPCIONAL)</label>
+                <select 
+                  name="zone" 
+                  defaultValue={editingDevice?.zone || ''}
+                  style={{ width: '100%', padding: '12px', borderRadius: 10, background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: 'white', fontSize: 13 }}
+                >
+                  <option value="">Ninguno (General)</option>
+                  {zones.map(z => <option key={z.id} value={z.id} style={{ background: '#0f172a' }}>{z.name}</option>)}
+                </select>
+              </div>
+
+              <button type="submit" disabled={loading} className="btn-primary" style={{ width: '100%', padding: '14px', borderRadius: 12, fontWeight: 800 }}>
+                {loading ? 'GUARDANDO...' : editingDevice ? 'ACTUALIZAR DISPOSITIVO' : 'REGISTRAR DISPOSITIVO'}
+              </button>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
+

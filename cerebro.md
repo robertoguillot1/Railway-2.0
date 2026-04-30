@@ -459,4 +459,44 @@ Se resolvieron problemas críticos de integridad de datos entre fincas, se habil
 
 ---
 
-*Documento actualizado - Proyecto HydroSmart Pro*
+---
+
+## Cambio 6: Gestión Completa de Dispositivos IoT y Finalización del Plan
+
+### Fecha: 2026-04-30
+
+### Resumen
+Se completó el último módulo crítico pendiente del plan de correcciones. `DevicesPage.jsx` ha dejado de usar datos falsos y ahora permite la gestión total de controladores ESP32 vinculados a la base de datos real.
+
+---
+
+### Detalles de las Mejoras:
+
+#### 1. CRUD de Dispositivos IoT (`DevicesPage.jsx`)
+- **Eliminación de Mocks**: Se eliminó la constante `MOCK_DEVICES`. La página ahora es 100% dinámica.
+- **Creación de Equipos**: Implementado el botón **"NUEVO ESP32"** que abre un modal para registrar dispositivos por su `device_id`.
+- **Edición y Borrado**: Añadidas acciones individuales en cada tarjeta de dispositivo para modificar el nombre, ID o asignación de zona, y para eliminar equipos obsoletos.
+- **Asignación Contextual**: Los dispositivos nuevos se vinculan automáticamente a la `selectedFarm` actual, manteniendo la integridad multitenant.
+
+#### 2. Sincronización con Backend (`hydroApi.js`)
+- **Conexión Total**: Las funciones `createDevice`, `updateDevice` y `deleteDevice` están ahora plenamente operativas en la interfaz de usuario.
+- **Feedback Visual**: Implementados estados de carga (loading) y alertas de confirmación para todas las operaciones de escritura.
+
+#### 3. Validación de Plan de Correcciones
+- **Módulo 1 (IoT Devices)**: ✅ COMPLETADO (CRUD real implementado).
+- **Módulo 2 (Users)**: ✅ COMPLETADO (Edición funcional).
+- **Módulo 3 (Rules)**: ✅ COMPLETADO (Modal con selectores reales).
+- **Módulo 4 (RBAC)**: ✅ COMPLETADO (Visualización de miembros reales).
+- **Módulo 5 (Persistencia)**: ✅ COMPLETADO (LocalStorage integrado).
+- **Módulo 6 (Selector)**: ✅ COMPLETADO (Filtro global operativo).
+
+---
+
+### Estado Final del Sistema
+- **Progreso**: 100% de los módulos administrativos y de control están operativos.
+- **Estabilidad**: La persistencia y el aislamiento de datos por finca están garantizados.
+- **Aestética**: El dashboard mantiene una línea de diseño premium y consistente.
+
+---
+
+*Documento actualizado - Proyecto HydroSmart Pro FINALIZADO*
