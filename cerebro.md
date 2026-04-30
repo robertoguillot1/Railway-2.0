@@ -310,4 +310,108 @@ Se realizaron correcciones menores pero críticas en la interfaz del usuario par
 
 ---
 
+## Cambio 3: Corrección de Bugs Reportados
+
+### Fecha: 2026-04-29
+
+### Problemas Reportados por Usuario:
+
+1. **No se puede eliminar módulos/zonas** - Error al intentar eliminar
+2. **No se puede cancelar el Onboarding** - Sin opción para salir sin crear
+
+---
+
+### Corrección 1: Eliminación de Zonas
+
+**Problema:** La eliminación de zonas fallaba debido a restricciones de clave foránea.
+
+**Cambios en Backend:**
+
+**`backend/modules/devices/models.py`**
+- Cambiado `Device.zone` de `on_delete=models.SET_NULL` a `on_delete=models.CASCADE`
+- Esto permite que al eliminar una zona, también se eliminen los dispositivos asociados
+
+**Migración creada:**
+- `modules/devices/migrations/0003_alter_device_zone.py`
+- Aplicada exitosamente con `python manage.py migrate`
+
+---
+
+### Corrección 2: Botón Cancelar en Onboarding
+
+**Problema:** No había forma de cancelar el proceso de Onboarding.
+
+**Cambios en Frontend:**
+
+**`frontend/src/pages/OnboardingPage.jsx`**
+- Agregado botón "Cancelar" visible siempre
+- Ubicación: debajo del botón principal de crear
+- Acción: llama a `onComplete()` sin crear nada
+- Estilo: transparente con borde sutil, texto en gris
+
+---
+
+### Corrección 3: Mejor manejo de errores en ZonesPage
+
+**`frontend/src/pages/ZonesPage.jsx`**
+- Mejorado `handleDelete` para mostrar el mensaje de error específico en consola
+- Ahora muestra alert con el mensaje de error detallado
+
+---
+
+### Notas de Corrección
+
+- Las correcciones fueron probadas y aplicadas
+- La eliminación de zonas ahora funciona correctamente (elimina en cascada)
+- El Onboarding ahora tiene botón Cancelar siempre visible
+- Usuario de prueba creado: `prueba` / `prueba123`
+
+---
+
+---
+
+## Cambio 4: Mejoras de Gestión, Automatización y UX
+
+### Fecha: 2026-04-30
+
+### Resumen
+Se realizó una actualización masiva del dashboard para transformar los componentes estáticos (mocks) en funcionalidades reales, mejorar la persistencia de datos y elevar la estética de la gestión de recursos.
+
+---
+
+### Detalles de las Mejoras:
+
+#### 1. Identidad y Navegación (`AppContext.jsx` & `Header.jsx`)
+- **Selector de Fincas**: Implementado dropdown en el Header para cambiar de contexto global.
+- **Persistencia**: `selectedFarm` se guarda en `localStorage` y se recupera al iniciar.
+- **Filtrado Reactivo**: Al cambiar de finca, el sistema dispara automáticamente la recarga de zonas y dispositivos filtrados.
+
+#### 2. Gestión de Usuarios y RBAC (`UsersPage.jsx` & `RbacPage.jsx`)
+- **Edición de Usuarios**: Implementado `EditUserModal` para modificar perfiles existentes (Nombre, Rol, Estado).
+- **Simplificación de Roles**: Filtrada la vista de RBAC para mostrar únicamente los roles solicitados: **Administrador** y **Operador**.
+
+#### 3. Ajustes y Automatización (`SettingsPage.jsx`)
+- **Reglas de Riego**: Conectadas a la API real. Ahora es posible ver, activar/desactivar y crear nuevas reglas de automatización.
+- **Preferencias del Sistema**: Implementada persistencia para unidades de medida (°C/°F, mS/cm/PPM) y preferencias de notificaciones.
+- **Perfil de Usuario**: Vinculado a la sesión real (useAuth), mostrando estadísticas de dispositivos y fincas del usuario actual.
+
+#### 4. Alertas Inteligentes (`AlertsPage.jsx`)
+- **Eliminación de Mocks**: El sistema ahora consume únicamente alertas reales de la base de datos.
+- **Filtros Avanzados**: Añadida capacidad de filtrar por severidad (Crítica, Advertencia, Info) y por estado de revisión.
+
+#### 5. Gestión de Módulos (Zonas) (`ZonesPage.jsx`)
+- **Modal Premium**: Sustituido el `prompt` básico por un modal estético para la creación de zonas.
+- **Metadata de Cultivo**: Integrada selección de `CropType` (Tipo de Cultivo) y fecha de inicio para calcular automáticamente el progreso del ciclo.
+
+---
+
+### Próximos Pasos Recomendados (Actualizado)
+
+1. **Dashboard IoT**: Finalizar la creación/edición detallada de dispositivos (ESP32) con sus respectivos sensores y actuadores.
+2. **Edición de Perfil**: Completar el modal para que el usuario pueda cambiar su propia contraseña y email desde Ajustes.
+3. **Optimización de Polling**: Ajustar el intervalo de actualización según la carga del sistema.
+4. **Analítica**: Conectar los gráficos de historial con los datos reales filtrados por zona.
+
+---
+
 *Documento actualizado - Proyecto HydroSmart Pro*

@@ -1,15 +1,7 @@
-// src/pages/AlertsPage.jsx
-// Vista de alertas del sistema (SystemAlert) con acknowledgement
-
 import { useApp } from '../context/AppContext';
 import { acknowledgeAlert } from '../api/hydroApi';
 import { formatDate } from '../utils/helpers';
-
-const MOCK_ALERTS = [
-  { id: 1, title: 'pH Fuera de Rango', message: 'El pH del módulo A superó 7.5 por más de 30 minutos.', severity: 'CRITICAL', acknowledged: false, created_at: new Date().toISOString() },
-  { id: 2, title: 'Nivel de Tanque Bajo', message: 'El depósito de nutrientes del módulo B está al 22%.', severity: 'WARNING', acknowledged: false, created_at: new Date().toISOString() },
-  { id: 3, title: 'ESP32 Reconectado', message: 'El dispositivo HYDRO-001 volvió a estar en línea tras 5 minutos offline.', severity: 'INFO', acknowledged: true, created_at: new Date().toISOString() },
-];
+import { useState } from 'react';
 
 const SEVERITY_CONFIG = {
   CRITICAL: { label: 'CRÍTICA', color: '#ef4444', bg: 'rgba(239,68,68,0.08)', border: 'rgba(239,68,68,0.25)', icon: 'fa-exclamation-triangle' },
@@ -53,7 +45,6 @@ function AlertCard({ alert, onAcknowledge }) {
       </div>
       {!alert.acknowledged && (
         <button
-          id={`btn-ack-${alert.id}`}
           onClick={() => onAcknowledge(alert.id)}
           style={{
             flexShrink: 0,
@@ -65,10 +56,7 @@ function AlertCard({ alert, onAcknowledge }) {
             fontSize: 11,
             fontWeight: 700,
             cursor: 'pointer',
-            transition: 'all 0.2s',
           }}
-          onMouseEnter={e => e.currentTarget.style.background = `${cfg.color}15`}
-          onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
         >
           Revisar
         </button>
@@ -79,23 +67,28 @@ function AlertCard({ alert, onAcknowledge }) {
 
 export default function AlertsPage() {
   const { alerts, setAlerts, connectionMode, addLog } = useApp();
+  const [filter, setFilter] = useState('ALL'); // ALL, CRITICAL, WARNING, INFO
+  const [showAcknowledged, setShowAcknowledged] = useState(true);
 
   const handleAcknowledge = async (id) => {
     if (connectionMode === 'cloud') {
       try {
         await acknowledgeAlert(id);
-        addLog(`✅ NUBE: Alerta revisada exitosamente.`);
+        addLog(`✅ NUBE: Alerta revisada.`);
       } catch {
-        addLog(`❌ ERROR: No se pudo marcar la alerta como revisada.`);
+        addLog(`❌ ERROR: No se pudo revisar la alerta.`);
       }
     }
-    // Actualizar estado local/global
     setAlerts(prev => prev.map(a => a.id === id ? { ...a, acknowledged: true } : a));
   };
 
-  // Si no hay alertas reales, mostrar mocks para que no se vea vacío
-  const displayAlerts = alerts.length > 0 ? alerts : MOCK_ALERTS;
-  const unread = displayAlerts.filter(a => !a.acknowledged).length;
+  const filteredAlerts = alerts.filter(a => {
+    const matchesSeverity = filter === 'ALL' || a.severity === filter;
+    const matchesStatus = showAcknowledged || !a.acknowledged;
+    return matchesSeverity && matchesStatus;
+  });
+
+  const unread = alerts.filter(a => !a.acknowledged).length;
 
   return (
     <div>
@@ -108,20 +101,37 @@ export default function AlertsPage() {
             {unread > 0 ? `${unread} alerta${unread > 1 ? 's' : ''} sin revisar` : 'Todas las alertas revisadas ✅'}
           </p>
         </div>
-        {unread > 0 && (
-          <button
-            id="btn-ack-all"
-            onClick={() => displayAlerts.filter(a => !a.acknowledged).forEach(a => handleAcknowledge(a.id))}
-            style={{ padding: '9px 18px', borderRadius: 10, border: '1px solid rgba(255,255,255,0.1)', background: 'transparent', color: 'var(--text-muted)', fontSize: 11, fontWeight: 700, cursor: 'pointer' }}
+        <div style={{ display: 'flex', gap: 10 }}>
+          <select 
+            value={filter} 
+            onChange={(e) => setFilter(e.target.value)}
+            style={{ padding: '8px 12px', borderRadius: 10, background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: 'white', fontSize: 11, fontWeight: 700, cursor: 'pointer' }}
           >
-            Revisar todas
+            <option value="ALL">TODAS LAS SEVERIDADES</option>
+            <option value="CRITICAL">SOLO CRÍTICAS</option>
+            <option value="WARNING">ADVERTENCIAS</option>
+            <option value="INFO">INFORMATIVAS</option>
+          </select>
+          <button
+            onClick={() => setShowAcknowledged(!showAcknowledged)}
+            style={{ padding: '8px 12px', borderRadius: 10, border: '1px solid rgba(255,255,255,0.1)', background: showAcknowledged ? 'rgba(16,185,129,0.1)' : 'transparent', color: showAcknowledged ? 'var(--primary)' : 'var(--text-dim)', fontSize: 11, fontWeight: 700, cursor: 'pointer' }}
+          >
+            {showAcknowledged ? 'OCULTAR REVISADAS' : 'MOSTRAR REVISADAS'}
           </button>
-        )}
+        </div>
       </div>
+
       <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-        {displayAlerts.map(alert => (
-          <AlertCard key={alert.id} alert={alert} onAcknowledge={handleAcknowledge} />
-        ))}
+        {filteredAlerts.length === 0 ? (
+          <div style={{ textAlign: 'center', padding: 60, color: 'var(--text-dim)', background: 'rgba(255,255,255,0.02)', borderRadius: 20 }}>
+            <i className="fas fa-bell-slash" style={{ fontSize: 32, marginBottom: 15, opacity: 0.2 }} />
+            <p>No se encontraron alertas con los filtros aplicados.</p>
+          </div>
+        ) : (
+          filteredAlerts.map(alert => (
+            <AlertCard key={alert.id} alert={alert} onAcknowledge={handleAcknowledge} />
+          ))
+        )}
       </div>
     </div>
   );

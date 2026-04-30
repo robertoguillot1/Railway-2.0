@@ -233,6 +233,20 @@ export default function OnboardingPage({ onComplete, isAbbreviated = false }) {
                 <>{isAbbreviated ? 'Crear Granja' : 'Siguiente'} <i className="fas fa-arrow-right" style={{ marginLeft: 8 }} /></>
               )}
             </button>
+            
+            {/* Botón Cancelar siempre visible */}
+            <button
+              type="button"
+              onClick={onComplete}
+              style={{
+                width: '100%', marginTop: 12, padding: '12px 24px', borderRadius: 12,
+                background: 'transparent', border: '1px solid rgba(255,255,255,0.1)',
+                color: '#64748b', fontWeight: 600, fontSize: 13,
+                cursor: 'pointer', fontFamily: 'Outfit, sans-serif',
+              }}
+            >
+              Cancelar
+            </button>
           </form>
         )}
 

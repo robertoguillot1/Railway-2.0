@@ -4,7 +4,7 @@ import { useApp } from '../../context/AppContext';
 import { formatTime } from '../../utils/helpers';
 
 export default function Header() {
-  const { telemetry, connectionMode, isConnected, setIaModalOpen } = useApp();
+  const { telemetry, connectionMode, isConnected, setIaModalOpen, farms, selectedFarm, setSelectedFarm } = useApp();
   const [time, setTime] = useState(formatTime());
 
   useEffect(() => {
@@ -46,6 +46,42 @@ export default function Header() {
           </div>
         </div>
       </div>
+
+      {/* Farm Selector */}
+      {farms.length > 0 && (
+        <div style={{ position: 'absolute', left: '50%', transform: 'translateX(-50%)', display: 'flex', alignItems: 'center', gap: 10 }}>
+          <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--text-dim)', letterSpacing: 1 }}>FINCA:</div>
+          <div style={{ position: 'relative' }}>
+            <select
+              value={selectedFarm?.id || ''}
+              onChange={(e) => {
+                const farm = farms.find(f => f.id === parseInt(e.target.value));
+                setSelectedFarm(farm);
+              }}
+              style={{
+                background: 'rgba(255,255,255,0.04)',
+                border: '1px solid rgba(255,255,255,0.08)',
+                color: 'white',
+                padding: '6px 35px 6px 15px',
+                borderRadius: 12,
+                fontSize: 12,
+                fontWeight: 700,
+                fontFamily: 'Outfit, sans-serif',
+                appearance: 'none',
+                cursor: 'pointer',
+                outline: 'none',
+                boxShadow: '0 4px 15px rgba(0,0,0,0.2)',
+                transition: 'all 0.3s'
+              }}
+            >
+              {farms.map(f => (
+                <option key={f.id} value={f.id} style={{ background: '#0d1424', color: 'white' }}>{f.name.toUpperCase()}</option>
+              ))}
+            </select>
+            <i className="fas fa-chevron-down" style={{ position: 'absolute', right: 12, top: '50%', transform: 'translateY(-50%)', fontSize: 10, color: 'var(--primary)', pointerEvents: 'none' }} />
+          </div>
+        </div>
+      )}
 
       {/* Status Pills */}
       <div className="header-pills" style={{ display: 'flex', gap: 10, alignItems: 'center' }}>

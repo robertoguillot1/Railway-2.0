@@ -1,9 +1,6 @@
-// src/pages/ZonesPage.jsx
-// Vista de zonas hidropónicas con gestión CRUD completa
-
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useApp } from '../context/AppContext';
-import { deleteZone, createZone, updateZone } from '../api/hydroApi';
+import { deleteZone, createZone, updateZone, getCropTypes } from '../api/hydroApi';
 import { STAGE_DISPLAY } from '../utils/helpers';
 
 function ZoneCard({ zone, onDelete, onToggle }) {
@@ -83,26 +80,44 @@ function ZoneCard({ zone, onDelete, onToggle }) {
 }
 
 export default function ZonesPage() {
-  const { zones, setZones, addLog, farms } = useApp();
+  const { zones, setZones, addLog, farms, selectedFarm } = useApp();
+  const [showModal, setShowModal] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [cropTypes, setCropTypes] = useState([]);
+  const [form, setForm] = useState({
+    name: '',
+    crop_type: '',
+    start_date: new Date().toISOString().split('T')[0]
+  });
 
-  const handleAddZone = async () => {
-    const name = prompt('Nombre del nuevo módulo (Ej: Modulo F6):');
-    if (!name) return;
-    const code = name.toLowerCase().replace(/\s+/g, '-');
+  useEffect(() => {
+    getCropTypes().then(setCropTypes).catch(console.error);
+  }, []);
+
+  const handleAddZone = async (e) => {
+    e.preventDefault();
+    if (!form.name || !form.crop_type) return alert('Por favor completa todos los campos');
     
+    const code = form.name.toLowerCase().replace(/\s+/g, '-');
+    const farmId = selectedFarm?.id || farms[0]?.id;
+    
+    if (!farmId) return alert('No hay ninguna finca seleccionada.');
+
     try {
       setLoading(true);
       const newZone = await createZone({ 
-        name, 
+        name: form.name, 
         code, 
-        farm: farms[0]?.id || 1, // Usar la primera granja disponible
+        farm: farmId,
+        crop_type: parseInt(form.crop_type),
         current_stage: 'GERMINATION',
         active: true,
-        start_date: new Date().toISOString().split('T')[0]
+        start_date: form.start_date
       });
       setZones(prev => [...prev, newZone]);
-      addLog(`✅ NUBE: Módulo "${name}" creado exitosamente.`);
+      addLog(`✅ NUBE: Módulo "${form.name}" creado exitosamente.`);
+      setShowModal(false);
+      setForm({ name: '', crop_type: '', start_date: new Date().toISOString().split('T')[0] });
     } catch (err) {
       alert('Error al crear módulo. Verifica la conexión.');
     } finally {
@@ -116,6 +131,7 @@ export default function ZonesPage() {
       setZones(prev => prev.filter(z => z.id !== id));
       addLog(`🗑️ NUBE: Módulo eliminado.`);
     } catch (err) {
+      console.error('Error al eliminar zona:', err);
       alert('No se pudo eliminar el módulo.');
     }
   };
@@ -138,17 +154,16 @@ export default function ZonesPage() {
             Módulos Hidropónicos
           </h1>
           <p style={{ color: 'var(--text-dim)', fontSize: 13 }}>
-            Gestiona tus zonas de cultivo, añade nuevos módulos o edita los existentes.
+            Gestiona tus zonas de cultivo en <span style={{ color: 'var(--primary)', fontWeight: 700 }}>{selectedFarm?.name || 'la instalación'}</span>.
           </p>
         </div>
         <button 
-          onClick={handleAddZone}
-          disabled={loading}
+          onClick={() => setShowModal(true)}
           style={{ 
             padding: '10px 20px', borderRadius: 12, background: 'var(--primary)', 
             border: 'none', color: '#0f1520', fontWeight: 800, fontSize: 12, 
             cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 8,
-            boxShadow: '0 4px 15px var(--primary-glow)', opacity: loading ? 0.7 : 1
+            boxShadow: '0 4px 15px var(--primary-glow)'
           }}
         >
           <i className="fas fa-plus" />
@@ -156,11 +171,66 @@ export default function ZonesPage() {
         </button>
       </div>
 
+      {showModal && (
+        <div className="modal-overlay">
+          <div className="modal-box" style={{ maxWidth: 450 }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 25 }}>
+              <div style={{ fontWeight: 800, fontSize: '1.2rem', fontFamily: 'Outfit' }}>Nuevo Módulo</div>
+              <button onClick={() => setShowModal(false)} style={{ background: 'transparent', border: 'none', color: 'var(--text-dim)', cursor: 'pointer', fontSize: 18 }}>
+                <i className="fas fa-times" />
+              </button>
+            </div>
+
+            <form onSubmit={handleAddZone}>
+              <div style={{ marginBottom: 18 }}>
+                <label style={{ fontSize: 10, fontWeight: 700, color: 'var(--text-dim)', letterSpacing: 1, display: 'block', marginBottom: 8 }}>NOMBRE DEL MÓDULO</label>
+                <input 
+                  type="text" required placeholder="Ej: Zona A-1"
+                  value={form.name}
+                  onChange={e => setForm({...form, name: e.target.value})}
+                  style={{ width: '100%', padding: '12px', borderRadius: 10, background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: 'white' }}
+                />
+              </div>
+
+              <div style={{ marginBottom: 18 }}>
+                <label style={{ fontSize: 10, fontWeight: 700, color: 'var(--text-dim)', letterSpacing: 1, display: 'block', marginBottom: 8 }}>TIPO DE CULTIVO</label>
+                <select 
+                  required
+                  value={form.crop_type}
+                  onChange={e => setForm({...form, crop_type: e.target.value})}
+                  style={{ width: '100%', padding: '12px', borderRadius: 10, background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: 'white' }}
+                >
+                  <option value="" disabled>Selecciona un cultivo</option>
+                  {cropTypes.map(c => <option key={c.id} value={c.id} style={{ background: '#0f172a' }}>{c.name}</option>)}
+                </select>
+              </div>
+
+              <div style={{ marginBottom: 25 }}>
+                <label style={{ fontSize: 10, fontWeight: 700, color: 'var(--text-dim)', letterSpacing: 1, display: 'block', marginBottom: 8 }}>FECHA DE INICIO</label>
+                <input 
+                  type="date" required
+                  value={form.start_date}
+                  onChange={e => setForm({...form, start_date: e.target.value})}
+                  style={{ width: '100%', padding: '12px', borderRadius: 10, background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: 'white' }}
+                />
+              </div>
+
+              <button 
+                type="submit" disabled={loading}
+                style={{ width: '100%', padding: '14px', borderRadius: 12, background: 'var(--primary)', border: 'none', color: '#0f1520', fontWeight: 800, cursor: 'pointer' }}
+              >
+                {loading ? 'CREANDO...' : 'CREAR MÓDULO HIDROPÓNICO'}
+              </button>
+            </form>
+          </div>
+        </div>
+      )}
+
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(340px, 1fr))', gap: 18 }}>
         {zones.length === 0 ? (
           <div style={{ gridColumn: '1/-1', color: 'var(--text-dim)', textAlign: 'center', padding: '60px', background: 'rgba(255,255,255,0.02)', borderRadius: 20, border: '1px dashed rgba(255,255,255,0.1)' }}>
             <i className="fas fa-seedling" style={{ fontSize: 40, marginBottom: 16, display: 'block', opacity: 0.3 }} />
-            No hay zonas registradas. ¡Crea tu primera zona arriba!
+            No hay zonas registradas para esta finca.
           </div>
         ) : (
           zones.map(zone => (

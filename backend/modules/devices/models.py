@@ -4,7 +4,7 @@ from modules.core.models import TimeStampedModel
 from modules.farms.models import Zone
 
 class Device(TimeStampedModel):
-    zone = models.ForeignKey(Zone, on_delete=models.SET_NULL, null=True, blank=True, related_name="devices")
+    zone = models.ForeignKey(Zone, on_delete=models.CASCADE, null=True, blank=True, related_name="devices")
     device_id = models.CharField(_("ID del Dispositivo"), max_length=50, unique=True)
     name = models.CharField(_("Nombre"), max_length=100)
     firmware_version = models.CharField(_("Versión de firmware"), max_length=50, blank=True)

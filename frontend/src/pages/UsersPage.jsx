@@ -5,7 +5,7 @@ import { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { BASE_URL } from '../api/hydroApi';
 
-function UserCard({ user, onDelete, onToggleActive, currentUserId }) {
+function UserCard({ user, onDelete, onToggleActive, onEdit, currentUserId }) {
   const isMe = user.id === currentUserId;
   return (
     <div style={{
@@ -94,6 +94,21 @@ function UserCard({ user, onDelete, onToggleActive, currentUserId }) {
           >
             <i className={`fas ${user.is_active ? 'fa-toggle-on' : 'fa-toggle-off'}`} />
           </button>
+          
+          {/* Editar */}
+          <button
+            onClick={() => onEdit(user)}
+            style={{
+              width: 34, height: 34, borderRadius: 10,
+              border: 'none', background: 'rgba(56,189,248,0.08)',
+              color: '#38bdf8', cursor: 'pointer', fontSize: 13, transition: 'all 0.2s',
+            }}
+            onMouseEnter={e => e.currentTarget.style.background = 'rgba(56,189,248,0.2)'}
+            onMouseLeave={e => e.currentTarget.style.background = 'rgba(56,189,248,0.08)'}
+            title="Editar usuario"
+          >
+            <i className="fas fa-edit" />
+          </button>
 
           {/* Eliminar */}
           <button
@@ -122,6 +137,7 @@ export default function UsersPage() {
   const [showForm, setShowForm] = useState(false);
   const [form, setForm] = useState({ username: '', email: '', first_name: '', last_name: '', password: '', is_admin: false });
   const [creating, setCreating] = useState(false);
+  const [editingUser, setEditingUser] = useState(null);
   const [formError, setFormError] = useState('');
 
   const headers = { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` };
@@ -139,6 +155,23 @@ export default function UsersPage() {
   const handleDelete = async (id) => {
     await fetch(`${BASE_URL}/api/v1/core/users/${id}/`, { method: 'DELETE', headers });
     setUsers(prev => prev.filter(u => u.id !== id));
+  };
+
+  const handleUpdate = async (e) => {
+    e.preventDefault();
+    setCreating(true);
+    try {
+      const res = await fetch(`${BASE_URL}/api/v1/core/users/${editingUser.id}/`, {
+        method: 'PATCH',
+        headers,
+        body: JSON.stringify(editingUser)
+      });
+      if (res.ok) {
+        await fetchUsers();
+        setEditingUser(null);
+      }
+    } catch { }
+    finally { setCreating(false); }
   };
 
   // Activar o desactivar un usuario (PATCH is_active)
@@ -274,6 +307,93 @@ export default function UsersPage() {
         </div>
       )}
 
+      {/* Edit User Modal */}
+      {editingUser && (
+        <div className="modal-overlay">
+          <div className="modal-box" style={{ textAlign: 'left', maxWidth: 600 }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
+              <div style={{ fontWeight: 800, fontSize: '1.2rem', fontFamily: 'Outfit' }}>
+                <i className="fas fa-user-edit" style={{ marginRight: 10, color: 'var(--primary)' }} />
+                Editar Perfil: {editingUser.username}
+              </div>
+              <button onClick={() => setEditingUser(null)} style={{ background: 'transparent', border: 'none', color: 'var(--text-dim)', cursor: 'pointer', fontSize: 18 }}>
+                <i className="fas fa-times" />
+              </button>
+            </div>
+
+            <form onSubmit={handleUpdate}>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 15, marginBottom: 20 }}>
+                <div>
+                  <label style={{ fontSize: 10, fontWeight: 700, color: 'var(--text-dim)', letterSpacing: 1, display: 'block', marginBottom: 6 }}>NOMBRE</label>
+                  <input
+                    type="text"
+                    value={editingUser.first_name || ''}
+                    onChange={e => setEditingUser(p => ({ ...p, first_name: e.target.value }))}
+                    style={{ width: '100%', padding: '10px 12px', borderRadius: 10, background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', color: 'white', fontSize: 12 }}
+                  />
+                </div>
+                <div>
+                  <label style={{ fontSize: 10, fontWeight: 700, color: 'var(--text-dim)', letterSpacing: 1, display: 'block', marginBottom: 6 }}>APELLIDO</label>
+                  <input
+                    type="text"
+                    value={editingUser.last_name || ''}
+                    onChange={e => setEditingUser(p => ({ ...p, last_name: e.target.value }))}
+                    style={{ width: '100%', padding: '10px 12px', borderRadius: 10, background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', color: 'white', fontSize: 12 }}
+                  />
+                </div>
+                <div style={{ gridColumn: 'span 2' }}>
+                  <label style={{ fontSize: 10, fontWeight: 700, color: 'var(--text-dim)', letterSpacing: 1, display: 'block', marginBottom: 6 }}>EMAIL</label>
+                  <input
+                    type="email"
+                    value={editingUser.email || ''}
+                    onChange={e => setEditingUser(p => ({ ...p, email: e.target.value }))}
+                    style={{ width: '100%', padding: '10px 12px', borderRadius: 10, background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', color: 'white', fontSize: 12 }}
+                  />
+                </div>
+              </div>
+
+              <div style={{ display: 'flex', gap: 20, marginBottom: 25 }}>
+                <label style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer', fontSize: 13 }}>
+                  <input
+                    type="checkbox"
+                    checked={editingUser.is_admin}
+                    onChange={e => setEditingUser(p => ({ ...p, is_admin: e.target.checked }))}
+                    style={{ width: 16, height: 16, accentColor: '#f59e0b' }}
+                  />
+                  <span>Es Administrador</span>
+                </label>
+                <label style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer', fontSize: 13 }}>
+                  <input
+                    type="checkbox"
+                    checked={editingUser.is_active}
+                    onChange={e => setEditingUser(p => ({ ...p, is_active: e.target.checked }))}
+                    style={{ width: 16, height: 16, accentColor: 'var(--primary)' }}
+                  />
+                  <span>Cuenta Activa</span>
+                </label>
+              </div>
+
+              <div style={{ display: 'flex', gap: 10 }}>
+                <button
+                  type="submit"
+                  disabled={creating}
+                  style={{ flex: 1, padding: '12px', borderRadius: 11, background: 'var(--primary)', border: 'none', color: '#0f1520', fontWeight: 800, fontSize: 12, cursor: 'pointer' }}
+                >
+                  {creating ? 'Guardando...' : 'GUARDAR CAMBIOS'}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setEditingUser(null)}
+                  style={{ flex: 1, padding: '12px', borderRadius: 11, background: 'rgba(255,255,255,0.05)', border: 'none', color: 'white', fontWeight: 800, fontSize: 12, cursor: 'pointer' }}
+                >
+                  CANCELAR
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
       {/* Users list */}
       <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
         {loading ? (
@@ -290,6 +410,7 @@ export default function UsersPage() {
               user={u}
               onDelete={handleDelete}
               onToggleActive={handleToggleActive}
+              onEdit={setEditingUser}
               currentUserId={currentUser?.id}
             />
           ))

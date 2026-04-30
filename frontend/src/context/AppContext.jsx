@@ -64,15 +64,46 @@ export function AppProvider({ children }) {
 
   // ─── Datos de finca/zonas ───────────────────────────────────────────────────
   const [farms, setFarms] = useState([]);
-  const [selectedFarm, setSelectedFarm] = useState(null);
+  const [selectedFarm, setSelectedFarm] = useState(() => {
+    const saved = localStorage.getItem('hydro_selected_farm');
+    return saved ? JSON.parse(saved) : null;
+  });
   const [zones, setZones] = useState([]);
   const [activeZone, setActiveZone] = useState(null);
+
+  const handleSetSelectedFarm = useCallback((farm) => {
+    setSelectedFarm(farm);
+    if (farm) {
+      localStorage.setItem('hydro_selected_farm', JSON.stringify(farm));
+    } else {
+      localStorage.removeItem('hydro_selected_farm');
+    }
+  }, []);
   
   // ─── Control de carga inicial ───────────────────────────────────────────────
   const [isInitialDataLoaded, setIsInitialDataLoaded] = useState(false);
 
   // ─── Día del cultivo (simulación) ───────────────────────────────────────────
   const [cropDay, setCropDay] = useState(1);
+
+  // ─── Preferencias del sistema ─────────────────────────────────────────────
+  const [systemPrefs, setSystemPrefs] = useState(() => {
+    const saved = localStorage.getItem('hydro_system_prefs');
+    return saved ? JSON.parse(saved) : {
+      tempUnit: 'Celsius (°C)',
+      condUnit: 'mS/cm',
+      criticalAlerts: true,
+      terminalSound: false
+    };
+  });
+
+  const updateSystemPrefs = useCallback((newPrefs) => {
+    setSystemPrefs(prev => {
+      const updated = { ...prev, ...newPrefs };
+      localStorage.setItem('hydro_system_prefs', JSON.stringify(updated));
+      return updated;
+    });
+  }, []);
 
   // ─── Historial de sensores ──────────────────────────────────────────────────
   const [sensorHistory, setSensorHistory] = useState({
@@ -262,14 +293,30 @@ export function AppProvider({ children }) {
     pollingRef.current = null;
   }, []);
 
+  // ─── Refrescar datos al cambiar de finca ────────────────────────────────────
+  useEffect(() => {
+    if (selectedFarm && isInitialDataLoaded) {
+      getZones(selectedFarm.id).then(setZones);
+    }
+  }, [selectedFarm, isInitialDataLoaded]);
+
   // ─── Carga inicial de datos (para Onboarding) ───────────────────────────────
   const loadInitialData = useCallback(async () => {
     try {
       const farmsData = await getFarms();
       setFarms(farmsData);
+      
       if (farmsData.length > 0) {
-        setSelectedFarm(farmsData[0]);
-        const zonesData = await getZones(farmsData[0].id);
+        // Intentar recuperar la finca guardada, si no, tomar la primera
+        const savedFarm = JSON.parse(localStorage.getItem('hydro_selected_farm'));
+        const currentFarm = savedFarm && farmsData.find(f => f.id === savedFarm.id) 
+          ? savedFarm 
+          : farmsData[0];
+          
+        setSelectedFarm(currentFarm);
+        localStorage.setItem('hydro_selected_farm', JSON.stringify(currentFarm));
+        
+        const zonesData = await getZones(currentFarm.id);
         setZones(zonesData);
       }
     } catch (err) {
@@ -291,7 +338,8 @@ export function AppProvider({ children }) {
     operationMode, setOperationMode,
     irrigationThreshold, setIrrigationThreshold,
     stopThreshold, setStopThreshold,
-    farms, setFarms, selectedFarm, setSelectedFarm,
+    systemPrefs, updateSystemPrefs,
+    farms, setFarms, selectedFarm, setSelectedFarm: handleSetSelectedFarm,
     zones, setZones, activeZone, setActiveZone,
     cropDay, setCropDay,
     sensorHistory, setSensorHistory,

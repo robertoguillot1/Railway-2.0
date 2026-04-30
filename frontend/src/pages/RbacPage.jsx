@@ -44,7 +44,10 @@ export default function RbacPage() {
           fetch(`${BASE_URL}/api/v1/core/usuario-roles/`, { headers }).then(r => r.json()),
           fetch(`${BASE_URL}/api/v1/core/recurso-roles/`, { headers }).then(r => r.json()),
         ]);
-        setRoles(Array.isArray(r) ? r : []);
+        const filteredRoles = (Array.isArray(r) ? r : []).filter(rol => 
+          ['Administrador', 'Operador'].includes(rol.nombre)
+        );
+        setRoles(filteredRoles);
         setRecursos(Array.isArray(res) ? res : []);
         setUsuarioRoles(Array.isArray(ur) ? ur : []);
         setRecursoRoles(Array.isArray(rr) ? rr : []);
