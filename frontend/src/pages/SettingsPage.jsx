@@ -11,7 +11,7 @@ export default function SettingsPage() {
     irrigationThreshold, setIrrigationThreshold, 
     stopThreshold, setStopThreshold,
     systemPrefs, updateSystemPrefs,
-    farms, setFarms, devices, selectedFarm, setSelectedFarm
+    farms, setFarms, devices, zones, selectedFarm, setSelectedFarm
   } = useApp();
   const { user, login } = useAuth();
   
