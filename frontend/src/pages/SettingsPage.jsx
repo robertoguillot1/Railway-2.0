@@ -11,7 +11,8 @@ export default function SettingsPage() {
     irrigationThreshold, setIrrigationThreshold, 
     stopThreshold, setStopThreshold,
     systemPrefs, updateSystemPrefs,
-    farms, setFarms, devices, zones, selectedFarm, setSelectedFarm
+    farms, setFarms, devices, zones, selectedFarm, setSelectedFarm,
+    setShowOnboarding, setOnboardingType
   } = useApp();
   const { user, login } = useAuth();
   
@@ -411,60 +412,88 @@ export default function SettingsPage() {
         </div>
       )}
 
-      {activeTab === 'farms' && (
-        <div className="glass-panel" style={{ padding: 30 }}>
-          <div className="panel-header" style={{ marginBottom: 25, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <span><i className="fas fa-tractor" /> Gestión de Instalaciones</span>
-            <span style={{ fontSize: 11, background: 'rgba(255,255,255,0.05)', padding: '4px 10px', borderRadius: 20 }}>{farms.length} Registradas</span>
-          </div>
-          
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: 15 }}>
-            {farms.map(f => (
-              <div key={f.id} className="actuator-card" style={{ 
-                margin: 0, padding: 20, flexDirection: 'column', alignItems: 'flex-start', 
-                gap: 15, background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)' 
-              }}>
-                <div style={{ width: '100%', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                  <div style={{ width: 40, height: 40, borderRadius: 12, background: 'rgba(16,185,129,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--primary)' }}>
-                    <i className="fas fa-farm" />
-                  </div>
-                  <button 
-                    onClick={() => handleDeleteFarm(f.id)}
-                    style={{ background: 'rgba(239,68,68,0.1)', color: '#ef4444', border: 'none', width: 32, height: 32, borderRadius: 10, cursor: 'pointer', transition: 'all 0.3s' }}
-                    title="Eliminar Instalación"
+      {activeTab === 'farms' && (() => {
+        const FARM_COLORS = [
+          { from: '#10b981', to: '#059669', glow: 'rgba(16,185,129,0.3)' },
+          { from: '#6366f1', to: '#4f46e5', glow: 'rgba(99,102,241,0.3)' },
+          { from: '#f59e0b', to: '#d97706', glow: 'rgba(245,158,11,0.3)' },
+          { from: '#ef4444', to: '#dc2626', glow: 'rgba(239,68,68,0.3)' },
+          { from: '#8b5cf6', to: '#7c3aed', glow: 'rgba(139,92,246,0.3)' },
+          { from: '#38bdf8', to: '#0ea5e9', glow: 'rgba(56,189,248,0.3)' },
+        ];
+        return (
+          <div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 28 }}>
+              <div>
+                <h2 style={{ fontFamily: 'Outfit', fontSize: '1.6rem', fontWeight: 800, marginBottom: 6, letterSpacing: '-0.5px' }}>Mis Instalaciones</h2>
+                <p style={{ color: 'var(--text-dim)', fontSize: 13 }}>Gestiona y organiza todas tus fincas hidropónicas.</p>
+              </div>
+              <div style={{ background: 'rgba(16,185,129,0.1)', border: '1px solid rgba(16,185,129,0.25)', borderRadius: 12, padding: '8px 18px', fontSize: 13, fontWeight: 700, color: 'var(--primary)', fontFamily: 'Outfit' }}>
+                <i className="fas fa-seedling" style={{ marginRight: 8 }} />{farms.length} Registradas
+              </div>
+            </div>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: 20 }}>
+              {farms.map((f, idx) => {
+                const palette = FARM_COLORS[idx % FARM_COLORS.length];
+                const initials = f.name.split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2);
+                const zoneCount = zones.filter(z => z.farm === f.id).length;
+                const devCount = devices.filter(d => d.farm === f.id).length;
+                return (
+                  <div key={f.id}
+                    style={{ borderRadius: 20, overflow: 'hidden', border: '1px solid rgba(255,255,255,0.07)', background: '#141e30', transition: 'transform 0.25s, box-shadow 0.25s' }}
+                    onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-4px)'; e.currentTarget.style.boxShadow = `0 16px 40px ${palette.glow}`; }}
+                    onMouseLeave={e => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = 'none'; }}
                   >
-                    <i className="fas fa-trash-alt" />
-                  </button>
+                    <div style={{ height: 100, background: `linear-gradient(135deg, ${palette.from}, ${palette.to})`, position: 'relative', display: 'flex', alignItems: 'flex-end', padding: '16px 20px' }}>
+                      <div style={{ position: 'absolute', inset: 0, opacity: 0.1, backgroundImage: 'radial-gradient(circle at 80% 20%, white 1px, transparent 1px)', backgroundSize: '20px 20px' }} />
+                      <div style={{ width: 52, height: 52, borderRadius: 16, background: 'rgba(0,0,0,0.25)', backdropFilter: 'blur(10px)', border: '2px solid rgba(255,255,255,0.3)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'Outfit', fontWeight: 800, fontSize: 18, color: 'white', letterSpacing: 1 }}>
+                        {initials}
+                      </div>
+                      <div style={{ position: 'absolute', top: 12, right: 12 }}>
+                        <button
+                          onClick={() => handleDeleteFarm(f.id)}
+                          style={{ width: 32, height: 32, borderRadius: 10, background: 'rgba(0,0,0,0.3)', backdropFilter: 'blur(8px)', border: '1px solid rgba(255,255,255,0.2)', color: 'white', cursor: 'pointer', fontSize: 12, transition: 'all 0.2s' }}
+                          onMouseEnter={e => e.currentTarget.style.background = 'rgba(239,68,68,0.7)'}
+                          onMouseLeave={e => e.currentTarget.style.background = 'rgba(0,0,0,0.3)'}
+                        ><i className="fas fa-trash-alt" /></button>
+                      </div>
+                    </div>
+                    <div style={{ padding: '20px 22px' }}>
+                      <div style={{ fontFamily: 'Outfit', fontWeight: 800, fontSize: 17, marginBottom: 5 }}>{f.name}</div>
+                      <div style={{ color: 'var(--text-dim)', fontSize: 12, display: 'flex', alignItems: 'center', gap: 6, marginBottom: 18 }}>
+                        <i className="fas fa-location-dot" style={{ color: palette.from, fontSize: 11 }} />
+                        {f.location || 'Sin ubicación registrada'}
+                      </div>
+                      <div style={{ display: 'flex', gap: 10 }}>
+                        {[{ val: zoneCount, label: 'MÓDULOS' }, { val: devCount, label: 'EQUIPOS' }, { val: '✓', label: 'ACTIVA' }].map(stat => (
+                          <div key={stat.label} style={{ flex: 1, borderRadius: 12, padding: '10px 8px', background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.06)', textAlign: 'center' }}>
+                            <div style={{ fontFamily: 'Outfit', fontSize: 22, fontWeight: 800, color: palette.from }}>{stat.val}</div>
+                            <div style={{ fontSize: 9, color: 'var(--text-dim)', letterSpacing: 1, marginTop: 2 }}>{stat.label}</div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+              <div
+                onClick={() => { setShowOnboarding(true); setOnboardingType('abbreviated'); }}
+                style={{ borderRadius: 20, border: '2px dashed rgba(16,185,129,0.3)', background: 'rgba(16,185,129,0.03)', minHeight: 240, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 12, cursor: 'pointer', transition: 'all 0.25s' }}
+                onMouseEnter={e => { e.currentTarget.style.background = 'rgba(16,185,129,0.08)'; e.currentTarget.style.borderColor = 'rgba(16,185,129,0.6)'; }}
+                onMouseLeave={e => { e.currentTarget.style.background = 'rgba(16,185,129,0.03)'; e.currentTarget.style.borderColor = 'rgba(16,185,129,0.3)'; }}
+              >
+                <div style={{ width: 52, height: 52, borderRadius: 16, background: 'rgba(16,185,129,0.1)', border: '1px solid rgba(16,185,129,0.25)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 22, color: 'var(--primary)' }}>
+                  <i className="fas fa-plus" />
                 </div>
-                
-                <div style={{ flex: 1 }}>
-                  <div style={{ fontSize: 15, fontWeight: 800, fontFamily: 'Outfit', marginBottom: 4 }}>{f.name}</div>
-                  <div style={{ fontSize: 11, color: 'var(--text-dim)', display: 'flex', alignItems: 'center', gap: 6 }}>
-                    <i className="fas fa-location-dot" style={{ fontSize: 10 }} />
-                    {f.location || 'Sin ubicación registrada'}
-                  </div>
-                </div>
-
-                <div style={{ width: '100%', paddingTop: 15, borderTop: '1px solid rgba(255,255,255,0.05)', display: 'flex', gap: 15 }}>
-                  <div style={{ fontSize: 10, color: 'var(--text-dim)' }}>
-                    <b style={{ color: 'white' }}>{zones.filter(z => z.farm === f.id).length}</b> ZONAS
-                  </div>
-                  <div style={{ fontSize: 10, color: 'var(--text-dim)' }}>
-                    <b style={{ color: 'white' }}>{devices.filter(d => d.farm === f.id).length}</b> EQ.
-                  </div>
+                <div style={{ textAlign: 'center' }}>
+                  <div style={{ fontFamily: 'Outfit', fontWeight: 700, fontSize: 15, color: 'var(--primary)', marginBottom: 4 }}>Nueva Instalación</div>
+                  <div style={{ fontSize: 12, color: 'var(--text-dim)' }}>Registrar una nueva finca</div>
                 </div>
               </div>
-            ))}
-          </div>
-
-          {farms.length === 0 && (
-            <div style={{ textAlign: 'center', padding: '40px 0', color: 'var(--text-dim)' }}>
-              <i className="fas fa-folder-open" style={{ fontSize: 30, marginBottom: 15, opacity: 0.3 }} />
-              <p fontSize={13}>No tienes instalaciones registradas aún.</p>
             </div>
-          )}
-        </div>
-      )}
+          </div>
+        );
+      })()}
 
       {showProfileModal && (
         <div className="modal-overlay">
