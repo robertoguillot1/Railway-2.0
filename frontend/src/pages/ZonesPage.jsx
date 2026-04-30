@@ -8,7 +8,7 @@ function ZoneCard({ zone, onDelete, onToggle, onEdit }) {
   const progress = Math.min((zone.current_day / (zone.crop_type?.duration_days || 30)) * 100, 100);
 
   return (
-    <div className="glass-panel" style={{ opacity: zone.active ? 1 : 0.6, position: 'relative' }}>
+    <div className="glass-panel zone-card" style={{ opacity: zone.active ? 1 : 0.6, position: 'relative' }}>
       <div className="panel-inner">
         {/* Actions Floating */}
         <div style={{ position: 'absolute', top: 12, right: 12, display: 'flex', gap: 6 }}>

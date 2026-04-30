@@ -332,7 +332,7 @@ export default function SettingsPage() {
           <div style={{ height: 120, background: 'linear-gradient(135deg, #10b981, #059669, #0d9488)', position: 'relative' }}>
             <div style={{ position: 'absolute', inset: 0, opacity: 0.1, backgroundImage: 'radial-gradient(circle at 30% 50%, white 1px, transparent 1px)', backgroundSize: '24px 24px' }} />
           </div>
-          <div style={{ padding: '0 32px 32px', textAlign: 'center', marginTop: -50 }}>
+          <div style={{ padding: '0 32px 32px', textAlign: 'center', marginTop: -50, position: 'relative', zIndex: 10 }}>
             <div style={{ width: 90, height: 90, borderRadius: '50%', background: 'linear-gradient(135deg, #10b981, #059669)', margin: '0 auto 16px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 28, fontFamily: 'Outfit', fontWeight: 800, color: 'white', border: '4px solid #141e30', boxShadow: '0 8px 24px rgba(16,185,129,0.4)' }}>
               {(user?.full_name || user?.username || '?')[0].toUpperCase()}
             </div>
