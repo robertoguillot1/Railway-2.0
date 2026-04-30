@@ -414,4 +414,49 @@ Se realizó una actualización masiva del dashboard para transformar los compone
 
 ---
 
+---
+
+## Cambio 5: Aislamiento de Datos, Gestión Real y Mejoras UX
+
+### Fecha: 2026-04-30
+
+### Resumen
+Se resolvieron problemas críticos de integridad de datos entre fincas, se habilitó el CRUD completo para instalaciones y se mejoró la transparencia del sistema RBAC y la automatización.
+
+---
+
+### Detalles de las Mejoras:
+
+#### 1. Aislamiento Total de Datos (`AppContext.jsx`)
+- **Fix de Fuga de Datos**: Se implementó el reseteo automático de la telemetría a **0** al cambiar de finca.
+- **Conexión Dinámica**: El estado `isConnected` y el `selectedDeviceId` ahora se limpian al cambiar de contexto, evitando que una finca nueva muestre datos de un ESP32 de otra finca (ej. Wokwi).
+- **Polling Estricto**: La lógica de obtención de datos ahora ignora lecturas globales si no hay un dispositivo específico seleccionado para la finca actual.
+
+#### 2. Gestión de Instalaciones (Fincas) (`SettingsPage.jsx`)
+- **Pestaña de Fincas**: Se creó una interfaz de administración premium para visualizar todas las instalaciones.
+- **CRUD de Eliminación**: Implementada la capacidad de eliminar fincas redundantes o repetidas con manejo de errores descriptivo.
+- **Limpieza en Cascada**: El borrado de una finca ahora asegura la eliminación de sus zonas y dispositivos asociados (Backend & Frontend sync).
+
+#### 3. Automatización Robusta (`SettingsPage.jsx` & `hydroApi.js`)
+- **Selector de Sensores en Reglas**: Se corrigió el error de creación de reglas añadiendo dropdowns dinámicos para seleccionar el **Módulo (Zona)** y el **Sensor de Humedad** específico.
+- **Integración API**: Conectada la función `createIrrigationRule` con validación de IDs numéricos para asegurar la persistencia en la base de datos.
+
+#### 4. Transparencia en Seguridad y Usuarios (`RbacPage.jsx` & `UsersPage.jsx`)
+- **Visibilidad de Miembros**: Las tarjetas de roles ahora muestran la **lista real de nombres de usuario** asignados (Administradores/Operadores), resolviendo la duda sobre quién pertenece a cada rol.
+- **Edición de Perfil Propio**: Habilitado el modal de "Editar Perfil" en Ajustes, permitiendo al usuario cambiar su Nombre, Apellido y Email mediante el nuevo endpoint `updateProfile`.
+- **UI de Usuarios**: Rediseño de la cabecera de gestión de usuarios con contadores activos/inactivos y estética mejorada.
+
+#### 5. Navegación y Consistencia UX
+- **Tabs Premium**: Refactorización de la navegación interna en Configuración con iconos dinámicos, estados activos claros y micro-animaciones.
+- **Alertas de Sistema**: Sincronización de los mensajes de error de la API con alertas visuales para el usuario en caso de fallos de red o permisos.
+
+---
+
+### Próximos Pasos Prioritarios
+1. **Validación de Hardware**: Probar la recepción de datos reales del ESP32 una vez seleccionada la finca y dispositivo correctos en el nuevo flujo aislado.
+2. **Dashboard de Actuadores**: Mejorar la retroalimentación visual cuando un actuador es activado por una regla de automatización.
+3. **Logs de Auditoría**: Implementar la visualización de quién realizó qué cambios en la página de RBAC.
+
+---
+
 *Documento actualizado - Proyecto HydroSmart Pro*
