@@ -270,6 +270,34 @@ El token se obtiene automáticamente de `localStorage.getItem('hydro_token')` en
 
 ---
 
+## Cambio 3: Correcciones de Interfaz y Conexión de API
+
+### Fecha: 2026-04-29
+
+### Resumen
+Se realizaron correcciones menores pero críticas en la interfaz del usuario para mejorar la visualización y se solucionó un problema de seguridad que impedía establecer la conexión manual al backend desde el panel de control.
+
+---
+
+### Detalles de las Correcciones:
+
+#### 1. Conexión Backend (`frontend/src/components/panels/ControlPanel.jsx`)
+**Problema:** Al intentar conectar el "Modo Railway", el botón fallaba y mostraba el error "No se pudo conectar con la base de datos en Railway".
+**Causa:** El botón realizaba un ping usando `fetch` directo sin inyectar el Token JWT, siendo rechazado por las nuevas políticas de seguridad implementadas en DRF (`IsAuthenticated`). Además, la ruta legacy de contingencia apuntaba al endpoint obsoleto (`/api/telemetria/historial`).
+**Solución:** 
+- Se configuró la inyección de `Authorization: Bearer <token>` extrayendo el JWT de `localStorage`.
+- Se actualizó la ruta de fallback a `/api/telemetria/`.
+
+#### 2. Scroll de Terminal (`frontend/src/components/panels/TerminalPanel.jsx`)
+**Problema:** El log del sistema crecía infinitamente estirando el layout del dashboard en pantallas grandes.
+**Solución:** Se eliminó la regla inline `height: '100%'` del contenedor de la terminal. Esto permitió que el componente respetara el límite de altura (`180px`) dictado por `index.css`, habilitando la barra de desplazamiento (`overflow-y: auto`) y el correcto funcionamiento del auto-scroll hacia abajo (`scrollIntoView`).
+
+#### 3. Cierre de Onboarding Abreviado (`frontend/src/pages/OnboardingPage.jsx`)
+**Problema:** Al crear una nueva granja desde el Sidebar (modo rápido), el proceso de creación se completaba en BD pero la interfaz se quedaba estancada en la vista modal, ya que intentaba avanzar al "Paso 2" (inexistente en este modo).
+**Solución:** Se agregó lógica condicional en la función `handleCreateFarm` para forzar la llamada a `onComplete()` y cerrar la vista en lugar de intentar llamar a `handleNext()` cuando la bandera `isAbbreviated` es verdadera.
+
+---
+
 ## Próximos Pasos Recomendados (Actualizado)
 
 1. ✅ ~~Integrar `getAuditLogs()`~~ - Pendiente de uso
