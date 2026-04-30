@@ -160,27 +160,53 @@ export default function RbacPage() {
           <div className="panel-inner">
             {/* ROLES */}
             {tab === 'roles' && (
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))', gap: 14 }}>
-                {roles.map(rol => (
-                  <div key={rol.id} style={{
-                    background: 'rgba(0,0,0,0.2)', borderRadius: 14, padding: '18px 20px',
-                    border: `1px solid ${rol.estado ? 'rgba(16,185,129,0.15)' : 'rgba(255,255,255,0.04)'}`,
-                    opacity: rol.estado ? 1 : 0.6,
-                  }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
-                      <div style={{ fontWeight: 700, fontSize: '0.95rem' }}>{rol.nombre}</div>
-                      <RolBadge nombre={rol.nombre} estado={rol.estado} />
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: 20 }}>
+                {roles.map(rol => {
+                  const members = usuarioRoles.filter(ur => ur.rol === rol.id);
+                  return (
+                    <div key={rol.id} style={{
+                      background: 'rgba(255,255,255,0.02)', borderRadius: 20, padding: 25,
+                      border: `1px solid ${rol.estado ? 'rgba(255,255,255,0.08)' : 'rgba(239,68,68,0.1)'}`,
+                      boxShadow: '0 10px 30px rgba(0,0,0,0.2)',
+                      transition: 'transform 0.3s',
+                    }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 18 }}>
+                        <div style={{ fontWeight: 800, fontSize: '1.1rem', fontFamily: 'Outfit' }}>{rol.nombre}</div>
+                        <RolBadge nombre={rol.nombre} estado={rol.estado} />
+                      </div>
+                      
+                      <div style={{ display: 'flex', gap: 15, marginBottom: 20 }}>
+                        <div style={{ flex: 1, background: 'rgba(255,255,255,0.03)', padding: '10px 12px', borderRadius: 12 }}>
+                          <div style={{ fontSize: 9, color: 'var(--text-dim)', marginBottom: 4 }}>USUARIOS</div>
+                          <div style={{ fontSize: 14, fontWeight: 800, color: 'var(--primary)' }}>{members.length}</div>
+                        </div>
+                        <div style={{ flex: 1, background: 'rgba(255,255,255,0.03)', padding: '10px 12px', borderRadius: 12 }}>
+                          <div style={{ fontSize: 9, color: 'var(--text-dim)', marginBottom: 4 }}>RECURSOS</div>
+                          <div style={{ fontSize: 14, fontWeight: 800, color: '#818cf8' }}>{rol.recursos_count}</div>
+                        </div>
+                      </div>
+
+                      <div style={{ marginBottom: 15 }}>
+                        <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--text-dim)', marginBottom: 8, letterSpacing: 0.5 }}>MIEMBROS ASIGNADOS</div>
+                        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+                          {members.length > 0 ? members.map(m => (
+                            <span key={m.id} style={{ background: 'rgba(255,255,255,0.05)', padding: '4px 8px', borderRadius: 8, fontSize: 10, border: '1px solid rgba(255,255,255,0.05)' }}>
+                              <i className="fas fa-user" style={{ fontSize: 8, marginRight: 5, color: 'var(--primary)' }} />
+                              {m.usuario_username}
+                            </span>
+                          )) : (
+                            <span style={{ fontSize: 10, color: 'var(--text-dim)', fontStyle: 'italic' }}>Sin usuarios asignados</span>
+                          )}
+                        </div>
+                      </div>
+
+                      <div style={{ paddingTop: 15, borderTop: '1px solid rgba(255,255,255,0.05)', fontSize: 10, color: rol.estado ? '#10b981' : '#ef4444', fontWeight: 700, display: 'flex', alignItems: 'center', gap: 6 }}>
+                        <i className={`fas ${rol.estado ? 'fa-check-circle' : 'fa-times-circle'}`} />
+                        {rol.estado ? 'EL ROL ESTÁ ACTIVO' : 'ROL DESACTIVADO'}
+                      </div>
                     </div>
-                    <div style={{ display: 'flex', gap: 16, fontSize: 11, color: 'var(--text-dim)' }}>
-                      <div><i className="fas fa-users" style={{ marginRight: 5, color: 'var(--primary)' }} />{rol.usuarios_count} usuarios</div>
-                      <div><i className="fas fa-key" style={{ marginRight: 5, color: '#818cf8' }} />{rol.recursos_count} recursos</div>
-                    </div>
-                    <div style={{ marginTop: 10, fontSize: 9, color: rol.estado ? '#10b981' : '#ef4444', letterSpacing: 1 }}>
-                      <i className={`fas ${rol.estado ? 'fa-check' : 'fa-ban'}`} style={{ marginRight: 5 }} />
-                      {rol.estado ? 'ACTIVO' : 'INACTIVO'}
-                    </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             )}
 

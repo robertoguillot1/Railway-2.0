@@ -65,16 +65,20 @@ export default function SettingsPage() {
   };
 
   const handleDeleteFarm = async (id) => {
-    if (!confirm('¿Seguro que quieres eliminar esta finca? Se borrarán todas sus zonas y dispositivos.')) return;
+    if (!confirm('¿Estás seguro de eliminar esta instalación? Se borrarán todos sus módulos y dispositivos asociados.')) return;
     try {
-      await deleteFarm(id);
+      const res = await deleteFarm(id);
+      if (res && res.error) throw new Error(res.error);
+      
       const updatedFarms = farms.filter(f => f.id !== id);
       setFarms(updatedFarms);
       if (selectedFarm?.id === id) {
         setSelectedFarm(updatedFarms[0] || null);
       }
-    } catch {
-      alert('Error al eliminar finca');
+      alert('Instalación eliminada correctamente.');
+    } catch (err) { 
+      console.error('[HYDRO] Error deleting farm:', err);
+      alert('No se pudo eliminar la finca. Verifica que no tenga dispositivos vinculados activamente o intenta refrescar la página.'); 
     }
   };
 
@@ -90,29 +94,28 @@ export default function SettingsPage() {
       </header>
 
       {/* Tabs */}
-      <div style={{ display: 'flex', gap: 15, marginBottom: 25, borderBottom: '1px solid rgba(255,255,255,0.05)', paddingBottom: 15 }}>
-        {['automation', 'system', 'profile', 'farms'].map(tab => (
+      <div style={{ display: 'flex', gap: 10, marginBottom: 30, borderBottom: '1px solid rgba(255,255,255,0.06)', paddingBottom: 15 }}>
+        {[
+          { id: 'automation', label: 'Automatización', icon: 'fa-robot' },
+          { id: 'system', label: 'Sistema', icon: 'fa-cog' },
+          { id: 'profile', label: 'Perfil', icon: 'fa-user-circle' },
+          { id: 'farms', label: 'Fincas', icon: 'fa-tractor' }
+        ].map(t => (
           <button
-            key={tab}
-            onClick={() => setActiveTab(tab)}
+            key={t.id}
+            onClick={() => setActiveTab(t.id)}
             style={{
-              background: 'transparent',
-              border: 'none',
-              color: activeTab === tab ? 'var(--primary)' : 'var(--text-dim)',
-              fontWeight: 700,
-              fontSize: 12,
-              letterSpacing: 1,
-              textTransform: 'uppercase',
-              cursor: 'pointer',
-              padding: '5px 10px',
-              position: 'relative',
-              transition: 'all 0.3s'
+              background: 'transparent', border: 'none',
+              color: activeTab === t.id ? 'var(--primary)' : 'var(--text-dim)',
+              fontWeight: 800, fontSize: 12, letterSpacing: 0.5,
+              cursor: 'pointer', padding: '8px 16px', borderRadius: 10,
+              display: 'flex', alignItems: 'center', gap: 8,
+              transition: 'all 0.3s',
+              background: activeTab === t.id ? 'rgba(16,185,129,0.08)' : 'transparent',
             }}
           >
-            {tab === 'automation' ? 'Automatización' : tab === 'system' ? 'Sistema' : tab === 'profile' ? 'Perfil' : 'Fincas'}
-            {activeTab === tab && (
-              <div style={{ position: 'absolute', bottom: -16, left: 0, right: 0, height: 2, background: 'var(--primary)', borderRadius: 2 }} />
-            )}
+            <i className={`fas ${t.icon}`} style={{ fontSize: 14 }} />
+            {t.label.toUpperCase()}
           </button>
         ))}
       </div>
@@ -203,7 +206,7 @@ export default function SettingsPage() {
         <div className="modal-overlay">
           <div className="modal-box" style={{ maxWidth: 450 }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 25 }}>
-              <div style={{ fontWeight: 800, fontSize: '1.2rem', fontFamily: 'Outfit' }}>Nueva Regla de Riego</div>
+              <div style={{ fontWeight: 800, fontSize: '1.2rem', fontFamily: 'Outfit' }}>Nueva Regla de Automatización</div>
               <button onClick={() => setShowRuleModal(false)} style={{ background: 'transparent', border: 'none', color: 'var(--text-dim)', cursor: 'pointer', fontSize: 18 }}>
                 <i className="fas fa-times" />
               </button>
@@ -211,27 +214,59 @@ export default function SettingsPage() {
             <form onSubmit={async (e) => {
               e.preventDefault();
               const fd = new FormData(e.target);
+              setLoading(true);
               try {
                 const newRule = await createIrrigationRule({
                   name: fd.get('name'),
                   min_threshold: fd.get('min'),
-                  sensor: fd.get('sensor'),
-                  zone: fd.get('zone'),
+                  sensor: parseInt(fd.get('sensor')),
+                  zone: parseInt(fd.get('zone')),
                   active: true
                 });
                 setRules(p => [...p, newRule]);
                 setShowRuleModal(false);
-              } catch { alert('Error al crear regla'); }
+                alert('Regla creada con éxito');
+              } catch (err) { 
+                console.error(err);
+                alert('Error al crear regla. Asegúrate de seleccionar zona y sensor.'); 
+              } finally {
+                setLoading(false);
+              }
             }}>
-              <div style={{ marginBottom: 15 }}>
-                <label style={{ fontSize: 10, fontWeight: 700, color: 'var(--text-dim)', display: 'block', marginBottom: 6 }}>NOMBRE REGLA</label>
-                <input name="name" required style={{ width: '100%', padding: '10px', borderRadius: 8, background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: 'white' }} />
+              <div style={{ marginBottom: 18 }}>
+                <label style={{ fontSize: 10, fontWeight: 700, color: 'var(--text-dim)', display: 'block', marginBottom: 8, letterSpacing: 1 }}>NOMBRE DE LA REGLA</label>
+                <input name="name" required placeholder="Ej: Riego de Emergencia" style={{ width: '100%', padding: '12px', borderRadius: 10, background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: 'white', fontSize: 13 }} />
               </div>
-              <div style={{ marginBottom: 15 }}>
-                <label style={{ fontSize: 10, fontWeight: 700, color: 'var(--text-dim)', display: 'block', marginBottom: 6 }}>HUMEDAD MÍNIMA (%)</label>
-                <input name="min" type="number" required style={{ width: '100%', padding: '10px', borderRadius: 8, background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: 'white' }} />
+              
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 15, marginBottom: 18 }}>
+                <div>
+                  <label style={{ fontSize: 10, fontWeight: 700, color: 'var(--text-dim)', display: 'block', marginBottom: 8, letterSpacing: 1 }}>MÓDULO (ZONA)</label>
+                  <select name="zone" required style={{ width: '100%', padding: '12px', borderRadius: 10, background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: 'white', fontSize: 13 }}>
+                    <option value="">Seleccionar...</option>
+                    {useApp().zones.map(z => <option key={z.id} value={z.id} style={{ background: '#0f172a' }}>{z.name}</option>)}
+                  </select>
+                </div>
+                <div>
+                  <label style={{ fontSize: 10, fontWeight: 700, color: 'var(--text-dim)', display: 'block', marginBottom: 8, letterSpacing: 1 }}>SENSOR DE HUMEDAD</label>
+                  <select name="sensor" required style={{ width: '100%', padding: '12px', borderRadius: 10, background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: 'white', fontSize: 13 }}>
+                    <option value="">Seleccionar...</option>
+                    {devices.filter(d => d.device_type === 'SENSOR' || d.sensors?.length > 0).map(d => (
+                      <optgroup key={d.id} label={d.name} style={{ background: '#0f172a' }}>
+                        {d.sensors?.map(s => <option key={s.id} value={s.id}>{s.name} ({s.sensor_type})</option>)}
+                      </optgroup>
+                    ))}
+                  </select>
+                </div>
               </div>
-              <button type="submit" className="btn-primary" style={{ width: '100%', padding: '12px', marginTop: 10 }}>GUARDAR REGLA</button>
+
+              <div style={{ marginBottom: 25 }}>
+                <label style={{ fontSize: 10, fontWeight: 700, color: 'var(--text-dim)', display: 'block', marginBottom: 8, letterSpacing: 1 }}>HUMEDAD MÍNIMA (%)</label>
+                <input name="min" type="number" min="0" max="100" required style={{ width: '100%', padding: '12px', borderRadius: 10, background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: 'white', fontSize: 13 }} />
+              </div>
+              
+              <button type="submit" disabled={loading} className="btn-primary" style={{ width: '100%', padding: '14px', borderRadius: 12, fontWeight: 800 }}>
+                {loading ? 'PROCESANDO...' : 'GUARDAR REGLA DE AUTOMATIZACIÓN'}
+              </button>
             </form>
           </div>
         </div>
@@ -332,25 +367,57 @@ export default function SettingsPage() {
       )}
 
       {activeTab === 'farms' && (
-        <div className="glass-panel" style={{ padding: 25 }}>
-          <div className="panel-header" style={{ marginBottom: 20 }}>
-            <i className="fas fa-tractor" /> Gestión de Instalaciones
+        <div className="glass-panel" style={{ padding: 30 }}>
+          <div className="panel-header" style={{ marginBottom: 25, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <span><i className="fas fa-tractor" /> Gestión de Instalaciones</span>
+            <span style={{ fontSize: 11, background: 'rgba(255,255,255,0.05)', padding: '4px 10px', borderRadius: 20 }}>{farms.length} Registradas</span>
           </div>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+          
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: 15 }}>
             {farms.map(f => (
-              <div key={f.id} className="actuator-card" style={{ marginBottom: 0 }}>
-                <div>
-                  <div style={{ fontSize: 13, fontWeight: 700 }}>{f.name}</div>
-                  <div style={{ fontSize: 10, color: 'var(--text-dim)' }}>{f.location}</div>
+              <div key={f.id} className="actuator-card" style={{ 
+                margin: 0, padding: 20, flexDirection: 'column', alignItems: 'flex-start', 
+                gap: 15, background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)' 
+              }}>
+                <div style={{ width: '100%', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                  <div style={{ width: 40, height: 40, borderRadius: 12, background: 'rgba(16,185,129,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--primary)' }}>
+                    <i className="fas fa-farm" />
+                  </div>
+                  <button 
+                    onClick={() => handleDeleteFarm(f.id)}
+                    style={{ background: 'rgba(239,68,68,0.1)', color: '#ef4444', border: 'none', width: 32, height: 32, borderRadius: 10, cursor: 'pointer', transition: 'all 0.3s' }}
+                    title="Eliminar Instalación"
+                  >
+                    <i className="fas fa-trash-alt" />
+                  </button>
                 </div>
-                <button 
-                  onClick={() => handleDeleteFarm(f.id)}
-                  style={{ background: 'rgba(239,68,68,0.1)', color: '#ef4444', border: 'none', padding: '6px 12px', borderRadius: 8, fontSize: 11, cursor: 'pointer' }}>
-                  <i className="fas fa-trash" />
-                </button>
+                
+                <div style={{ flex: 1 }}>
+                  <div style={{ fontSize: 15, fontWeight: 800, fontFamily: 'Outfit', marginBottom: 4 }}>{f.name}</div>
+                  <div style={{ fontSize: 11, color: 'var(--text-dim)', display: 'flex', alignItems: 'center', gap: 6 }}>
+                    <i className="fas fa-location-dot" style={{ fontSize: 10 }} />
+                    {f.location || 'Sin ubicación registrada'}
+                  </div>
+                </div>
+
+                <div style={{ width: '100%', paddingTop: 15, borderTop: '1px solid rgba(255,255,255,0.05)', display: 'flex', gap: 15 }}>
+                  <div style={{ fontSize: 10, color: 'var(--text-dim)' }}>
+                    <b style={{ color: 'white' }}>{zones.filter(z => z.farm === f.id).length}</b> ZONAS
+                  </div>
+                  <div style={{ fontSize: 10, color: 'var(--text-dim)' }}>
+                    <b style={{ color: 'white' }}>{devices.filter(d => d.farm === f.id).length}</b> EQ.
+                  </div>
+                </div>
               </div>
             ))}
           </div>
+
+          {farms.length === 0 && (
+            <div style={{ textAlign: 'center', padding: '40px 0', color: 'var(--text-dim)' }}>
+              <i className="fas fa-folder-open" style={{ fontSize: 30, marginBottom: 15, opacity: 0.3 }} />
+              <p fontSize={13}>No tienes instalaciones registradas aún.</p>
+            </div>
+          )}
         </div>
       )}
 

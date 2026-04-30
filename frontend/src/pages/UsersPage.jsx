@@ -215,32 +215,36 @@ export default function UsersPage() {
 
   return (
     <div>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
-        <div>
-          <h1 style={{ fontFamily: 'Outfit', fontSize: '1.4rem', fontWeight: 700, marginBottom: 6 }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24, gap: 15, flexWrap: 'wrap' }}>
+        <div style={{ flex: 1, minWidth: 300 }}>
+          <h1 style={{ fontFamily: 'Outfit', fontSize: '1.8rem', fontWeight: 800, marginBottom: 8, letterSpacing: '-0.5px' }}>
             Gestión de Usuarios
           </h1>
           <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
-            <span style={{ color: 'var(--text-dim)', fontSize: 13 }}>
-              {users.length} usuario{users.length !== 1 ? 's' : ''} en total
+            <span style={{ color: 'var(--text-dim)', fontSize: 13, fontWeight: 600 }}>
+              {users.length} USUARIOS REGISTRADOS
             </span>
-            <span className="badge badge-ok">{activeCount} activos</span>
-            {inactiveCount > 0 && <span className="badge badge-danger">{inactiveCount} inactivos</span>}
+            <div style={{ width: 4, height: 4, borderRadius: '50%', background: 'rgba(255,255,255,0.2)' }} />
+            <span style={{ color: '#10b981', fontSize: 11, fontWeight: 700 }}>{activeCount} ACTIVOS</span>
           </div>
         </div>
-        <button
-          onClick={() => setShowForm(!showForm)}
-          style={{
-            padding: '10px 20px', borderRadius: 12, background: showForm ? 'rgba(239,68,68,0.15)' : 'var(--primary)',
-            border: showForm ? '1px solid rgba(239,68,68,0.3)' : 'none',
-            color: showForm ? '#ef4444' : '#0f1520', fontWeight: 800, fontSize: 12,
-            cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 8,
-            boxShadow: showForm ? 'none' : '0 4px 15px var(--primary-glow)', fontFamily: 'Outfit, sans-serif',
-          }}
-        >
-          <i className={`fas ${showForm ? 'fa-times' : 'fa-user-plus'}`} />
-          {showForm ? 'CANCELAR' : 'NUEVO USUARIO'}
-        </button>
+        
+        <div style={{ display: 'flex', gap: 12 }}>
+          <button
+            onClick={() => setShowForm(!showForm)}
+            style={{
+              padding: '12px 24px', borderRadius: 14, background: showForm ? 'rgba(239,68,68,0.1)' : 'var(--primary)',
+              border: showForm ? '1px solid rgba(239,68,68,0.2)' : 'none',
+              color: showForm ? '#ef4444' : '#0f1520', fontWeight: 800, fontSize: 12,
+              cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 8,
+              boxShadow: showForm ? 'none' : '0 4px 15px var(--primary-glow)', fontFamily: 'Outfit, sans-serif',
+              transition: 'all 0.3s'
+            }}
+          >
+            <i className={`fas ${showForm ? 'fa-times' : 'fa-user-plus'}`} />
+            {showForm ? 'CANCELAR' : 'NUEVO USUARIO'}
+          </button>
+        </div>
       </div>
 
       {/* Create form */}
