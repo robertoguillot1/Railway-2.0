@@ -37,7 +37,11 @@ export default function OnboardingPage({ onComplete, isAbbreviated = false }) {
       const farm = await createFarm(farmData);
       setFarms(prev => [...prev, farm]);
       setSelectedFarm(farm);
-      handleNext();
+      if (isAbbreviated) {
+        onComplete();
+      } else {
+        handleNext();
+      }
     } catch (err) {
       setError('Error al crear la granja. Intenta de nuevo.');
     } finally {
