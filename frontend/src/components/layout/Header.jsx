@@ -4,8 +4,15 @@ import { useApp } from '../../context/AppContext';
 import { formatTime } from '../../utils/helpers';
 
 export default function Header() {
-  const { telemetry, connectionMode, isConnected, setIaModalOpen, farms, selectedFarm, setSelectedFarm } = useApp();
+  const { 
+    telemetry, connectionMode, isConnected, setIaModalOpen, 
+    farms, selectedFarm, setSelectedFarm, activePage 
+  } = useApp();
   const [time, setTime] = useState(formatTime());
+
+  // Páginas que son globales y NO necesitan selector de finca
+  const GLOBAL_PAGES = ['users', 'rbac', 'logs'];
+  const showFarmSelector = !GLOBAL_PAGES.includes(activePage);
 
   useEffect(() => {
     const t = setInterval(() => setTime(formatTime()), 1000);
@@ -48,7 +55,7 @@ export default function Header() {
       </div>
 
       {/* Farm Selector */}
-      {farms.length > 0 && (
+      {showFarmSelector && farms.length > 0 && (
         <div style={{ position: 'absolute', left: '50%', transform: 'translateX(-50%)', display: 'flex', alignItems: 'center', gap: 10 }}>
           <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--text-dim)', letterSpacing: 1 }}>FINCA:</div>
           <div style={{ position: 'relative' }}>
