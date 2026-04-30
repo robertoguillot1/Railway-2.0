@@ -3,17 +3,30 @@
 
 export const BASE_URL = import.meta.env.VITE_API_URL || 'https://railway-20-production-7eaa.up.railway.app';
 
-async function apiFetch(path, options = {}) {
-  const res = await fetch(`${BASE_URL}${path}`, {
-    headers: { 'Content-Type': 'application/json', ...options.headers },
+function apiFetch(path, options = {}) {
+  const token = localStorage.getItem('hydro_token');
+  const headers = { 'Content-Type': 'application/json' };
+  if (token) headers['Authorization'] = `Bearer ${token}`;
+  
+  return fetch(`${BASE_URL}${path}`, {
+    headers: { ...headers, ...options.headers },
     ...options,
+  }).then(res => {
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    return res.json();
   });
-  if (!res.ok) throw new Error(`HTTP ${res.status}`);
-  return res.json();
 }
 
-// ─── FARMS ────────────────────────────────────────────────────────────────────
+// ─── FARMS (CRUD Completo) ─────────────────────────────────────────────────────
 export const getFarms = () => apiFetch('/api/v1/farms/farms/').catch(() => []);
+export const createFarm = (data) =>
+  apiFetch('/api/v1/farms/farms/', { method: 'POST', body: JSON.stringify(data) });
+export const updateFarm = (id, data) =>
+  apiFetch(`/api/v1/farms/farms/${id}/`, { method: 'PATCH', body: JSON.stringify(data) });
+export const deleteFarm = (id) =>
+  apiFetch(`/api/v1/farms/farms/${id}/`, { method: 'DELETE' });
+
+// ─── ZONES ────────────────────────────────────────────────────────────────────
 export const getZones = (farmId) =>
   apiFetch(farmId ? `/api/v1/farms/zones/?farm=${farmId}` : '/api/v1/farms/zones/');
 export const createZone = (data) =>
@@ -24,8 +37,27 @@ export const deleteZone = (id) =>
   apiFetch(`/api/v1/farms/zones/${id}/`, { method: 'DELETE' });
 export const getCropTypes = () => apiFetch('/api/v1/farms/crops/');
 
-// ─── DEVICES ──────────────────────────────────────────────────────────────────
+// ─── CORE (Users, RBAC, Audit) ─────────────────────────────────────────────────
+export const getAuditLogs = () => apiFetch('/api/v1/core/audit-logs/').catch(() => []);
+export const getMyResources = () => apiFetch('/api/v1/core/mis-recursos/').catch(() => []);
+
+// ─── DEVICES (CRUD Completo) ───────────────────────────────────────────────────
 export const getDevices = () => apiFetch('/api/v1/devices/list/');
+export const getDevicesByFarm = (farmId) => {
+  if (!farmId) return getDevices();
+  return apiFetch(`/api/v1/farms/zones/?farm=${farmId}`).then(zones => {
+    const zoneIds = zones.map(z => z.id);
+    return getDevices().then(devices => 
+      devices.filter(d => zoneIds.includes(d.zone))
+    );
+  });
+};
+export const createDevice = (data) =>
+  apiFetch('/api/v1/devices/list/', { method: 'POST', body: JSON.stringify(data) });
+export const updateDevice = (id, data) =>
+  apiFetch(`/api/v1/devices/list/${id}/`, { method: 'PATCH', body: JSON.stringify(data) });
+export const deleteDevice = (id) =>
+  apiFetch(`/api/v1/devices/list/${id}/`, { method: 'DELETE' });
 export const getSensors = () => apiFetch('/api/v1/devices/sensors/');
 export const getActuators = () => apiFetch('/api/v1/devices/actuators/');
 export const updateActuator = (id, data) =>
@@ -47,9 +79,18 @@ export const acknowledgeAlert = (id) =>
     body: JSON.stringify({ acknowledged: true }),
   });
 
+// ─── IRRIGATION RULES ─────────────────────────────────────────────────────────
+export const getIrrigationRules = () => apiFetch('/api/v1/automation/rules/');
+export const createIrrigationRule = (data) =>
+  apiFetch('/api/v1/automation/rules/', { method: 'POST', body: JSON.stringify(data) });
+export const updateIrrigationRule = (id, data) =>
+  apiFetch(`/api/v1/automation/rules/${id}/`, { method: 'PATCH', body: JSON.stringify(data) });
+export const deleteIrrigationRule = (id) =>
+  apiFetch(`/api/v1/automation/rules/${id}/`, { method: 'DELETE' });
+
 // ─── LEGACY (Railway v1 endpoint) ─────────────────────────────────────────────
 export const getTelemetriaHistorial = () =>
-  apiFetch('/api/telemetria/historial');
+  apiFetch('/api/telemetria/');
 
 export const testConnection = async (url) => {
   const res = await fetch(url, { signal: AbortSignal.timeout(5000) });

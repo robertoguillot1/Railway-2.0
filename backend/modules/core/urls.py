@@ -1,6 +1,6 @@
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
-from .views import me_view, UserManagementViewSet
+from .views import me_view, UserManagementViewSet, AuditLogViewSet
 from .rbac_views import (
     RolViewSet, RecursoViewSet,
     UsuarioHasRolViewSet, RecursoHasRolViewSet,
@@ -10,6 +10,7 @@ from .rbac_views import (
 router = DefaultRouter()
 # Gestión de usuarios
 router.register(r'users', UserManagementViewSet, basename='user')
+router.register(r'audit-logs', AuditLogViewSet, basename='audit-log')
 # RBAC — exactamente las 4 tablas del diagrama del profesor
 router.register(r'roles', RolViewSet, basename='rol')
 router.register(r'recursos', RecursoViewSet, basename='recurso')

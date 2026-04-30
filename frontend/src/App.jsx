@@ -1,9 +1,9 @@
 // src/App.jsx
 // Componente raíz: provee contexto, maneja login y renderiza layout
 
-import { AppProvider } from './context/AppContext';
+import { useEffect } from 'react';
 import { AuthProvider, useAuth } from './context/AuthContext';
-import { useApp } from './context/AppContext';
+import { AppProvider, useApp } from './context/AppContext';
 import { useSimulator } from './hooks/useSimulator';
 import Header from './components/layout/Header';
 import Sidebar from './components/layout/Sidebar';
@@ -18,6 +18,7 @@ import AnalyticsPage from './pages/AnalyticsPage';
 import SettingsPage from './pages/SettingsPage';
 import UsersPage from './pages/UsersPage';
 import RbacPage from './pages/RbacPage';
+import OnboardingPage from './pages/OnboardingPage';
 
 function PageContent() {
   const { activePage } = useApp();
@@ -40,10 +41,29 @@ function PageContent() {
   return pages[activePage] || pages.dashboard;
 }
 
-function AppShell() {
-  const { user, loading } = useAuth();
+function AppContent() {
+  const { user, loading: authLoading } = useAuth();
+  const { 
+    farms, isInitialDataLoaded, loadInitialData,
+    showOnboarding, setShowOnboarding, onboardingType
+  } = useApp();
 
-  if (loading) {
+  // Cargar datos iniciales cuando el usuario hace login
+  useEffect(() => {
+    if (user && !isInitialDataLoaded) {
+      loadInitialData();
+    }
+  }, [user, isInitialDataLoaded, loadInitialData]);
+
+  // Determinar si mostrar onboarding (solo para usuarios nuevos sin granjas)
+  useEffect(() => {
+    if (isInitialDataLoaded && user && farms.length === 0 && !showOnboarding) {
+      setShowOnboarding(true);
+    }
+  }, [isInitialDataLoaded, user, farms, showOnboarding, setShowOnboarding]);
+
+  // Loading inicial de autenticación
+  if (authLoading) {
     return (
       <div style={{
         minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center',
@@ -60,29 +80,56 @@ function AppShell() {
     );
   }
 
+  // No está logueado
   if (!user) return <LoginPage />;
 
+  // Mostrar Onboarding si es necesario
+  if (showOnboarding) {
+    return (
+      <OnboardingPage 
+        isAbbreviated={onboardingType === 'abbreviated'}
+        onComplete={async () => {
+          await loadInitialData();
+          setShowOnboarding(false);
+        }}
+      />
+    );
+  }
+
+  // Dashboard normal
+  return (
+    <div className="app-layout">
+      <Header />
+      <div className="main-wrapper">
+        <Sidebar />
+        <main className="content-area">
+          <PageContent />
+        </main>
+      </div>
+      <MobileNav />
+      <IAModal />
+    </div>
+  );
+}
+
+// Componente interno que provee AppProvider
+function AppWithProvider() {
   return (
     <AppProvider>
-      <div className="app-layout">
-        <Header />
-        <div className="main-wrapper">
-          <Sidebar />
-          <main className="content-area">
-            <PageContent />
-          </main>
-        </div>
-        <MobileNav />
-        <IAModal />
-      </div>
+      <AppContent />
     </AppProvider>
   );
 }
 
-export default function App() {
+// Wrapper que provee AuthProvider
+function AppShell() {
   return (
     <AuthProvider>
-      <AppShell />
+      <AppWithProvider />
     </AuthProvider>
   );
+}
+
+export default function App() {
+  return <AppShell />;
 }

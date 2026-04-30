@@ -17,9 +17,14 @@ const ADMIN_ITEMS = [
 ];
 
 export default function Sidebar() {
-  const { activePage, setActivePage, setIaModalOpen, alerts } = useApp();
+  const { activePage, setActivePage, setIaModalOpen, alerts, setShowOnboarding, setOnboardingType } = useApp();
   const { isAdmin, user, logout } = useAuth();
   const unread = alerts?.filter(a => !a.acknowledged)?.length || 0;
+
+  const handleNewFarm = () => {
+    setOnboardingType('abbreviated');
+    setShowOnboarding(true);
+  };
 
   const renderBtn = (item) => (
     <button
@@ -84,6 +89,27 @@ export default function Sidebar() {
           {ADMIN_ITEMS.map(renderBtn)}
         </>
       )}
+
+      {/* Nueva Granja Button */}
+      <button
+        id="nav-new-farm"
+        title="Nueva Granja"
+        onClick={handleNewFarm}
+        style={{
+          width: 46, height: 46, borderRadius: 13,
+          marginTop: 16,
+          border: '1px dashed rgba(16,185,129,0.4)',
+          background: 'rgba(16,185,129,0.08)',
+          color: 'var(--primary)',
+          display: 'flex', justifyContent: 'center', alignItems: 'center',
+          cursor: 'pointer', fontSize: 16,
+          transition: 'all 0.25s',
+        }}
+        onMouseEnter={e => { e.currentTarget.style.background = 'rgba(16,185,129,0.2)'; }}
+        onMouseLeave={e => { e.currentTarget.style.background = 'rgba(16,185,129,0.08)'; }}
+      >
+        <i className="fas fa-plus" />
+      </button>
 
       {/* AI Button */}
       <button

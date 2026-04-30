@@ -10,8 +10,9 @@ import json
 from .models import SensorReading, SystemEvent, SystemAlert
 from django.utils import timezone
 from datetime import timedelta
-from .serializers import SensorReadingSerializer, SystemEventSerializer, SystemAlertSerializer, TelemetriaSerializer
+from .serializers import SensorReadingSerializer, SystemEventSerializer, SystemAlertSerializer, TelemetriaSerializer, IrrigationRuleSerializer
 from modules.devices.models import Device, Sensor, Actuator
+from .models import SensorReading, SystemEvent, SystemAlert, IrrigationRule
 
 class SensorReadingViewSet(viewsets.ModelViewSet):
     queryset = SensorReading.objects.all()
@@ -159,3 +160,8 @@ class SystemEventViewSet(viewsets.ModelViewSet):
 class SystemAlertViewSet(viewsets.ModelViewSet):
     queryset = SystemAlert.objects.all()
     serializer_class = SystemAlertSerializer
+
+class IrrigationRuleViewSet(viewsets.ModelViewSet):
+    queryset = IrrigationRule.objects.all()
+    serializer_class = IrrigationRuleSerializer
+

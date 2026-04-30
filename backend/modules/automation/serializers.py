@@ -24,3 +24,9 @@ class SystemAlertSerializer(serializers.ModelSerializer):
     class Meta:
         model = SystemAlert
         fields = '__all__'
+
+class IrrigationRuleSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = IrrigationRule
+        fields = '__all__'
+

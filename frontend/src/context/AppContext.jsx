@@ -64,8 +64,12 @@ export function AppProvider({ children }) {
 
   // ─── Datos de finca/zonas ───────────────────────────────────────────────────
   const [farms, setFarms] = useState([]);
+  const [selectedFarm, setSelectedFarm] = useState(null);
   const [zones, setZones] = useState([]);
   const [activeZone, setActiveZone] = useState(null);
+  
+  // ─── Control de carga inicial ───────────────────────────────────────────────
+  const [isInitialDataLoaded, setIsInitialDataLoaded] = useState(false);
 
   // ─── Día del cultivo (simulación) ───────────────────────────────────────────
   const [cropDay, setCropDay] = useState(1);
@@ -81,6 +85,10 @@ export function AppProvider({ children }) {
   // ─── Navegación ─────────────────────────────────────────────────────────────
   const [activePage, setActivePage] = useState('dashboard');
   const [iaModalOpen, setIaModalOpen] = useState(false);
+  
+  // ─── Onboarding ─────────────────────────────────────────────────────────────
+  const [showOnboarding, setShowOnboarding] = useState(false);
+  const [onboardingType, setOnboardingType] = useState('full'); // 'full' or 'abbreviated'
 
   // ─── Lógica de Simulación (Solo para modo Demo) ─────────────────────────────
   useEffect(() => {
@@ -254,6 +262,23 @@ export function AppProvider({ children }) {
     pollingRef.current = null;
   }, []);
 
+  // ─── Carga inicial de datos (para Onboarding) ───────────────────────────────
+  const loadInitialData = useCallback(async () => {
+    try {
+      const farmsData = await getFarms();
+      setFarms(farmsData);
+      if (farmsData.length > 0) {
+        setSelectedFarm(farmsData[0]);
+        const zonesData = await getZones(farmsData[0].id);
+        setZones(zonesData);
+      }
+    } catch (err) {
+      console.error('[HYDRO] Error cargando datos iniciales:', err);
+    } finally {
+      setIsInitialDataLoaded(true);
+    }
+  }, []);
+
   const value = {
     connectionMode, setConnectionMode,
     cloudUrl, setCloudUrl,
@@ -266,13 +291,16 @@ export function AppProvider({ children }) {
     operationMode, setOperationMode,
     irrigationThreshold, setIrrigationThreshold,
     stopThreshold, setStopThreshold,
-    farms, zones, activeZone, setActiveZone,
+    farms, setFarms, selectedFarm, setSelectedFarm,
+    zones, setZones, activeZone, setActiveZone,
     cropDay, setCropDay,
     sensorHistory, setSensorHistory,
     devices, selectedDeviceId, setSelectedDeviceId: handleSetSelectedDevice,
     activePage, setActivePage,
     iaModalOpen, setIaModalOpen,
+    showOnboarding, setShowOnboarding, onboardingType, setOnboardingType,
     startCloudPolling, stopCloudPolling,
+    isInitialDataLoaded, loadInitialData,
   };
 
   return <AppContext.Provider value={value}>{children}</AppContext.Provider>;

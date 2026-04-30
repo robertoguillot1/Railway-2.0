@@ -3,7 +3,8 @@ from rest_framework import viewsets, permissions, status
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.response import Response
 from rest_framework.views import APIView
-from .serializers import UserSerializer, CreateUserSerializer
+from .serializers import UserSerializer, CreateUserSerializer, AuditLogSerializer
+from .models import AuditLog
 
 class IsAdminUser(permissions.BasePermission):
     """Permiso: solo administradores (is_staff o is_superuser)."""
@@ -36,3 +37,12 @@ class UserManagementViewSet(viewsets.ModelViewSet):
             return Response({'error': 'No puedes eliminarte a ti mismo.'}, status=status.HTTP_400_BAD_REQUEST)
         user.delete()
         return Response({'message': f'Usuario {user.username} eliminado correctamente.'}, status=status.HTTP_200_OK)
+
+class AuditLogViewSet(viewsets.ReadOnlyModelViewSet):
+    """
+    ViewSet para ver auditorías. Solo accesible por administradores.
+    """
+    queryset = AuditLog.objects.all().order_by('-created_at')
+    serializer_class = AuditLogSerializer
+    permission_classes = [IsAdminUser]
+
