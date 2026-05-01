@@ -1,3 +1,4 @@
+from rest_framework import viewsets
 from modules.core.views import AuditMixin
 from .models import Zone, CropType, Farm
 from .serializers import ZoneSerializer, CropTypeSerializer, FarmSerializer

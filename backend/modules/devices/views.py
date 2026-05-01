@@ -1,3 +1,4 @@
+from rest_framework import viewsets
 from modules.core.views import AuditMixin
 from .models import Device, Sensor, Actuator, ActuatorStateHistory
 from .serializers import DeviceSerializer, SensorSerializer, ActuatorSerializer, ActuatorStateHistorySerializer
