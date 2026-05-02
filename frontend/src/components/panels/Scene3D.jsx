@@ -204,14 +204,13 @@ function build3DScene(container, cropDay, pumpOn) {
 export default function Scene3D() {
   const { telemetry, cropDay, addLog, camUrl, updateCamUrl } = useApp();
   const [view, setView] = useState('3d');
-  const [camMode, setCamMode] = useState('stream'); // 'stream' | 'iframe'
   const [hasError, setHasError] = useState(false);
   const canvasRef = useRef(null);
   const pumpRef = useRef(telemetry.pumpState);
   const cleanupRef = useRef(null);
 
-  // Reset error when URL or mode changes
-  useEffect(() => { setHasError(false); }, [camUrl, camMode]);
+  // Reset error when URL changes
+  useEffect(() => { setHasError(false); }, [camUrl]);
 
   // Update pump ref in real time
   useEffect(() => { pumpRef.current = telemetry.pumpState; }, [telemetry.pumpState]);
@@ -236,7 +235,7 @@ export default function Scene3D() {
   };
 
   const handleConnect = () => {
-    addLog(`📷 CAM: Conectando a ${camUrl || 'N/A'} [Modo: ${camMode.toUpperCase()}]`);
+    addLog(`📷 CAM: Conectando a ${camUrl || 'N/A'}`);
     setHasError(false);
   };
 
@@ -253,41 +252,13 @@ export default function Scene3D() {
       {view === 'live' && (
         <div style={{ width: '100%', height: '100%', background: '#000', position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
           
-          {/* CAMERA MODES TOGGLE */}
-          <div style={{ position: 'absolute', top: 60, right: 12, display: 'flex', gap: 4, zIndex: 20 }}>
-            <button 
-              onClick={() => setCamMode('stream')}
-              style={{ 
-                padding: '4px 8px', fontSize: 9, borderRadius: 4, border: 'none', cursor: 'pointer',
-                background: camMode === 'stream' ? 'var(--primary)' : 'rgba(255,255,255,0.1)',
-                color: camMode === 'stream' ? '#000' : '#fff'
-              }}
-            >STREAM</button>
-            <button 
-              onClick={() => setCamMode('iframe')}
-              style={{ 
-                padding: '4px 8px', fontSize: 9, borderRadius: 4, border: 'none', cursor: 'pointer',
-                background: camMode === 'iframe' ? 'var(--primary)' : 'rgba(255,255,255,0.1)',
-                color: camMode === 'iframe' ? '#000' : '#fff'
-              }}
-            >WEB (IFRAME)</button>
-          </div>
-
           {camUrl && !hasError ? (
-            camMode === 'stream' ? (
-              <img
-                src={camUrl}
-                alt="Cámara en vivo"
-                style={{ width: '100%', height: '100%', objectFit: 'contain' }}
-                onError={() => setHasError(true)}
-              />
-            ) : (
-              <iframe
-                src={camUrl}
-                title="Cámara Web Interface"
-                style={{ width: '100%', height: '100%', border: 'none', background: '#fff' }}
-              />
-            )
+            <img
+              src={camUrl}
+              alt="Cámara en vivo"
+              style={{ width: '100%', height: '100%', objectFit: 'contain' }}
+              onError={() => setHasError(true)}
+            />
           ) : (
             <div style={{ textAlign: 'center', color: 'var(--text-dim)', padding: 20 }}>
               <i className="fas fa-video-slash" style={{ fontSize: 48, marginBottom: 16, color: hasError ? 'var(--accent-red)' : 'var(--text-dim)' }} />
@@ -329,7 +300,7 @@ export default function Scene3D() {
               ) : (
                 <>
                   <div style={{ fontSize: 13 }}>Ingresa la URL de la cámara abajo</div>
-                  <div style={{ fontSize: 10, marginTop: 8, color: '#475569' }}>Ej: https://abc.pinggy-free.link/stream</div>
+                  <div style={{ fontSize: 10, marginTop: 8, color: '#475569' }}>Ej: https://abc.pinggy-free.link/video</div>
                 </>
               )}
             </div>
