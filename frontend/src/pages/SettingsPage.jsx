@@ -106,8 +106,8 @@ export default function SettingsPage() {
         </p>
       </header>
 
-      {/* Tabs */}
-      <div style={{ display: 'flex', gap: 10, marginBottom: 30, borderBottom: '1px solid rgba(255,255,255,0.06)', paddingBottom: 15 }}>
+      {/* Tabs Desktop */}
+      <div className="desktop-only" style={{ display: 'flex', gap: 10, marginBottom: 30, borderBottom: '1px solid rgba(255,255,255,0.06)', paddingBottom: 15 }}>
         {[
           { id: 'automation', label: 'Automatización', icon: 'fa-robot' },
           { id: 'system', label: 'Sistema', icon: 'fa-cog' },
@@ -133,6 +133,39 @@ export default function SettingsPage() {
             {t.label.toUpperCase()}
           </button>
         ))}
+      </div>
+
+      {/* Tabs Mobile */}
+      <div className="mobile-only" style={{ marginBottom: 30 }}>
+        <select 
+          value={activeTab} 
+          onChange={e => setActiveTab(e.target.value)}
+          style={{ 
+            width: '100%', 
+            padding: '14px', 
+            borderRadius: 12, 
+            background: 'rgba(255,255,255,0.05)', 
+            border: '1px solid rgba(255,255,255,0.1)', 
+            color: 'var(--primary)', 
+            fontWeight: 800, 
+            fontSize: 14, 
+            fontFamily: 'Outfit', 
+            letterSpacing: 0.5 
+          }}
+        >
+          {[
+            { id: 'automation', label: 'Automatización' },
+            { id: 'system', label: 'Sistema' },
+            { id: 'profile', label: 'Perfil' },
+            { id: 'security', label: 'Seguridad' },
+            { id: 'farms', label: 'Fincas' },
+            { id: 'crops', label: 'Cultivos' }
+          ].map(t => (
+            <option key={t.id} value={t.id} style={{ background: '#0f172a', color: 'white' }}>
+              {t.label.toUpperCase()}
+            </option>
+          ))}
+        </select>
       </div>
 
       {activeTab === 'automation' && (

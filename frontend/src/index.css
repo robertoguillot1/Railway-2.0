@@ -562,6 +562,8 @@ body {
 /* ---- DIVIDER ---- */
 .divider { border: none; border-top: 1px solid rgba(255,255,255,0.05); margin: 16px 0; }
 
+.mobile-only { display: none; }
+
 /* ============ RESPONSIVE ============ */
 @media (max-width: 1200px) {
   .dashboard-grid { grid-template-columns: 300px 1fr; }
@@ -628,7 +630,8 @@ body {
     padding: 0 5px;
   }
 
-  .mobile-hide { display: none !important; }
+  .mobile-hide, .desktop-only { display: none !important; }
+  .mobile-only { display: block !important; }
 
   #scene-container { height: 260px !important; }
   #analytics-container { height: auto !important; }
