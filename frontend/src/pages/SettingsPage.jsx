@@ -3,7 +3,8 @@ import { useAuth } from '../context/AuthContext';
 import { useState, useEffect } from 'react';
 import { 
   getIrrigationRules, updateIrrigationRule, createIrrigationRule, 
-  updateProfile, deleteFarm, updateFarm 
+  updateProfile, deleteFarm, updateFarm,
+  getCropTypes, createCropType, updateCropType, deleteCropType
 } from '../api/hydroApi';
 
 export default function SettingsPage() {
@@ -22,6 +23,10 @@ export default function SettingsPage() {
   const [showRuleModal, setShowRuleModal] = useState(false);
   const [showProfileModal, setShowProfileModal] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [crops, setCrops] = useState([]);
+  const [showCropModal, setShowCropModal] = useState(false);
+  const [editingCrop, setEditingCrop] = useState(null);
+  const [cropForm, setCropForm] = useState({ name: '', duration_days: 30, icon: 'fa-seedling' });
 
   const [profileForm, setProfileForm] = useState({
     first_name: user?.first_name || '',
@@ -37,6 +42,13 @@ export default function SettingsPage() {
         .then(setRules)
         .catch(console.error)
         .finally(() => setLoadingRules(false));
+    }
+    if (activeTab === 'crops') {
+      setLoading(true);
+      getCropTypes()
+        .then(setCrops)
+        .catch(console.error)
+        .finally(() => setLoading(false));
     }
   }, [activeTab]);
 
@@ -101,7 +113,8 @@ export default function SettingsPage() {
           { id: 'system', label: 'Sistema', icon: 'fa-cog' },
           { id: 'profile', label: 'Perfil', icon: 'fa-user-circle' },
           { id: 'security', label: 'Seguridad', icon: 'fa-shield-halved' },
-          { id: 'farms', label: 'Fincas', icon: 'fa-tractor' }
+          { id: 'farms', label: 'Fincas', icon: 'fa-tractor' },
+          { id: 'crops', label: 'Cultivos', icon: 'fa-seedling' }
         ].map(t => (
           <button
             key={t.id}
@@ -497,6 +510,119 @@ export default function SettingsPage() {
           </div>
         );
       })()}
+
+      {activeTab === 'crops' && (
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: 24 }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <h2 style={{ fontFamily: 'Outfit', fontSize: '1.5rem', fontWeight: 800 }}>Catálogo de Cultivos</h2>
+            <button 
+              onClick={() => { setEditingCrop(null); setCropForm({ name: '', duration_days: 30, icon: 'fa-seedling' }); setShowCropModal(true); }}
+              className="btn-primary" style={{ borderRadius: 12, padding: '10px 20px', fontSize: 12 }}
+            >
+              <i className="fas fa-plus" style={{ marginRight: 8 }} /> NUEVO CULTIVO
+            </button>
+          </div>
+
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: 15 }}>
+            {crops.map(c => (
+              <div key={c.id} className="glass-panel" style={{ padding: 20 }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 15 }}>
+                  <div style={{ width: 44, height: 44, borderRadius: 12, background: 'rgba(16,185,129,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--primary)', fontSize: 20 }}>
+                    <i className={`fas ${c.icon || 'fa-seedling'}`} />
+                  </div>
+                  <div style={{ display: 'flex', gap: 6 }}>
+                    <button 
+                      onClick={() => { setEditingCrop(c); setCropForm({ name: c.name, duration_days: c.duration_days, icon: c.icon }); setShowCropModal(true); }}
+                      style={{ width: 30, height: 30, borderRadius: 8, border: 'none', background: 'rgba(56,189,248,0.1)', color: '#38bdf8', cursor: 'pointer' }}
+                    ><i className="fas fa-pen" style={{ fontSize: 10 }} /></button>
+                    <button 
+                      onClick={async () => {
+                        if(confirm(`¿Eliminar ${c.name}?`)) {
+                          try {
+                            await deleteCropType(c.id);
+                            setCrops(prev => prev.filter(x => x.id !== c.id));
+                          } catch { alert('Error al eliminar. Verifique si el cultivo está en uso.'); }
+                        }
+                      }}
+                      style={{ width: 30, height: 30, borderRadius: 8, border: 'none', background: 'rgba(239,68,68,0.1)', color: '#ef4444', cursor: 'pointer' }}
+                    ><i className="fas fa-trash" style={{ fontSize: 10 }} /></button>
+                  </div>
+                </div>
+                <div style={{ fontFamily: 'Outfit', fontWeight: 800, fontSize: 16, marginBottom: 4 }}>{c.name}</div>
+                <div style={{ fontSize: 11, color: 'var(--text-dim)', display: 'flex', alignItems: 'center', gap: 6 }}>
+                  <i className="fas fa-clock" style={{ fontSize: 10 }} />
+                  Ciclo estimado: {c.duration_days} días
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {showCropModal && (
+        <div className="modal-overlay">
+          <div className="modal-box" style={{ maxWidth: 400 }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 25 }}>
+              <div style={{ fontWeight: 800, fontSize: '1.2rem', fontFamily: 'Outfit' }}>
+                {editingCrop ? 'Editar Cultivo' : 'Nuevo Cultivo'}
+              </div>
+              <button onClick={() => setShowCropModal(false)} style={{ background: 'transparent', border: 'none', color: 'var(--text-dim)', cursor: 'pointer', fontSize: 18 }}>
+                <i className="fas fa-times" />
+              </button>
+            </div>
+            <form onSubmit={async (e) => {
+              e.preventDefault();
+              setLoading(true);
+              try {
+                if (editingCrop) {
+                  const updated = await updateCropType(editingCrop.id, cropForm);
+                  setCrops(prev => prev.map(x => x.id === editingCrop.id ? updated : x));
+                } else {
+                  const created = await createCropType(cropForm);
+                  setCrops(prev => [...prev, created]);
+                }
+                setShowCropModal(false);
+              } catch (err) { alert('Error al guardar cultivo'); }
+              finally { setLoading(false); }
+            }}>
+              <div style={{ marginBottom: 15 }}>
+                <label style={{ fontSize: 10, fontWeight: 700, color: 'var(--text-dim)', display: 'block', marginBottom: 6, letterSpacing: 1 }}>NOMBRE DEL CULTIVO</label>
+                <input 
+                  required value={cropForm.name}
+                  onChange={e => setCropForm({...cropForm, name: e.target.value})}
+                  placeholder="Ej: Lechuga Crespa"
+                  style={{ width: '100%', padding: '12px', borderRadius: 10, background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: 'white' }} 
+                />
+              </div>
+              <div style={{ marginBottom: 20 }}>
+                <label style={{ fontSize: 10, fontWeight: 700, color: 'var(--text-dim)', display: 'block', marginBottom: 6, letterSpacing: 1 }}>DURACIÓN DEL CICLO (DÍAS)</label>
+                <input 
+                  type="number" required value={cropForm.duration_days}
+                  onChange={e => setCropForm({...cropForm, duration_days: e.target.value})}
+                  style={{ width: '100%', padding: '12px', borderRadius: 10, background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: 'white' }} 
+                />
+              </div>
+              <div style={{ marginBottom: 25 }}>
+                <label style={{ fontSize: 10, fontWeight: 700, color: 'var(--text-dim)', display: 'block', marginBottom: 6, letterSpacing: 1 }}>ICONO (FontAwesome)</label>
+                <select 
+                  value={cropForm.icon}
+                  onChange={e => setCropForm({...cropForm, icon: e.target.value})}
+                  style={{ width: '100%', padding: '12px', borderRadius: 10, background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: 'white' }}
+                >
+                  <option value="fa-seedling">Plántula</option>
+                  <option value="fa-leaf">Hoja</option>
+                  <option value="fa-apple-whole">Fruto</option>
+                  <option value="fa-carrot">Zanahoria</option>
+                  <option value="fa-pepper-hot">Ají/Pimiento</option>
+                </select>
+              </div>
+              <button type="submit" disabled={loading} className="btn-primary" style={{ width: '100%', padding: '14px', borderRadius: 12 }}>
+                {loading ? 'GUARDANDO...' : 'GUARDAR CULTIVO'}
+              </button>
+            </form>
+          </div>
+        </div>
+      )}
 
       {showProfileModal && (
         <div className="modal-overlay">

@@ -3,7 +3,7 @@ from modules.core.views import AuditMixin
 from .models import Zone, CropType, Farm
 from .serializers import ZoneSerializer, CropTypeSerializer, FarmSerializer
 
-class CropTypeViewSet(viewsets.ModelViewSet):
+class CropTypeViewSet(AuditMixin, viewsets.ModelViewSet):
     queryset = CropType.objects.all()
     serializer_class = CropTypeSerializer
 

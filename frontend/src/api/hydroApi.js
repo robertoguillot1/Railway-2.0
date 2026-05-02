@@ -38,6 +38,12 @@ export const updateZone = (id, data) =>
 export const deleteZone = (id) =>
   apiFetch(`/api/v1/farms/zones/${id}/`, { method: 'DELETE' });
 export const getCropTypes = () => apiFetch('/api/v1/farms/crops/');
+export const createCropType = (data) =>
+  apiFetch('/api/v1/farms/crops/', { method: 'POST', body: JSON.stringify(data) });
+export const updateCropType = (id, data) =>
+  apiFetch(`/api/v1/farms/crops/${id}/`, { method: 'PATCH', body: JSON.stringify(data) });
+export const deleteCropType = (id) =>
+  apiFetch(`/api/v1/farms/crops/${id}/`, { method: 'DELETE' });
 
 // ─── CORE (Users, RBAC, Audit) ─────────────────────────────────────────────────
 export const getAuditLogs = () => apiFetch('/api/v1/core/audit-logs/').catch(() => []);
