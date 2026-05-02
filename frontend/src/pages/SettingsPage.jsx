@@ -249,14 +249,14 @@ export default function SettingsPage() {
                 <div>
                   <label style={{ fontSize: 10, fontWeight: 700, color: 'var(--text-dim)', display: 'block', marginBottom: 8, letterSpacing: 1 }}>MÓDULO (ZONA)</label>
                   <select name="zone" required style={{ width: '100%', padding: '12px', borderRadius: 10, background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: 'white', fontSize: 13 }}>
-                    <option value="">Seleccionar...</option>
-                    {useApp().zones.map(z => <option key={z.id} value={z.id} style={{ background: '#0f172a' }}>{z.name}</option>)}
+                    <option value="" style={{ background: '#0f172a', color: 'white' }}>Seleccionar...</option>
+                    {useApp().zones.map(z => <option key={z.id} value={z.id} style={{ background: '#0f172a', color: 'white' }}>{z.name}</option>)}
                   </select>
                 </div>
                 <div>
                   <label style={{ fontSize: 10, fontWeight: 700, color: 'var(--text-dim)', display: 'block', marginBottom: 8, letterSpacing: 1 }}>SENSOR DE HUMEDAD</label>
                   <select name="sensor" required style={{ width: '100%', padding: '12px', borderRadius: 10, background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: 'white', fontSize: 13 }}>
-                    <option value="">Seleccionar...</option>
+                    <option value="" style={{ background: '#0f172a', color: 'white' }}>Seleccionar...</option>
                     {devices.filter(d => d.device_type === 'SENSOR' || d.sensors?.length > 0).map(d => (
                       <optgroup key={d.id} label={d.name} style={{ background: '#0f172a' }}>
                         {d.sensors?.map(s => <option key={s.id} value={s.id}>{s.name} ({s.sensor_type})</option>)}
@@ -609,11 +609,11 @@ export default function SettingsPage() {
                   onChange={e => setCropForm({...cropForm, icon: e.target.value})}
                   style={{ width: '100%', padding: '12px', borderRadius: 10, background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: 'white' }}
                 >
-                  <option value="fa-seedling">Plántula</option>
-                  <option value="fa-leaf">Hoja</option>
-                  <option value="fa-apple-whole">Fruto</option>
-                  <option value="fa-carrot">Zanahoria</option>
-                  <option value="fa-pepper-hot">Ají/Pimiento</option>
+                  <option value="fa-seedling" style={{ background: '#0f172a', color: 'white' }}>Plántula</option>
+                  <option value="fa-leaf" style={{ background: '#0f172a', color: 'white' }}>Hoja</option>
+                  <option value="fa-apple-whole" style={{ background: '#0f172a', color: 'white' }}>Fruto</option>
+                  <option value="fa-carrot" style={{ background: '#0f172a', color: 'white' }}>Zanahoria</option>
+                  <option value="fa-pepper-hot" style={{ background: '#0f172a', color: 'white' }}>Ají/Pimiento</option>
                 </select>
               </div>
               <button type="submit" disabled={loading} className="btn-primary" style={{ width: '100%', padding: '14px', borderRadius: 12 }}>
