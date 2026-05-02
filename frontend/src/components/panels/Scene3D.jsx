@@ -203,12 +203,15 @@ function build3DScene(container, cropDay, pumpOn) {
 }
 
 export default function Scene3D() {
-  const { telemetry, cropDay, addLog } = useApp();
+  const { telemetry, cropDay, addLog, camUrl, updateCamUrl } = useApp();
   const [view, setView] = useState('3d');
-  const [camUrl, setCamUrl] = useState('');
+  const [hasError, setHasError] = useState(false);
   const canvasRef = useRef(null);
   const pumpRef = useRef(telemetry.pumpState);
   const cleanupRef = useRef(null);
+
+  // Reset error when URL changes
+  useEffect(() => { setHasError(false); }, [camUrl]);
 
   // Update pump ref in real time
   useEffect(() => { pumpRef.current = telemetry.pumpState; }, [telemetry.pumpState]);
@@ -225,8 +228,16 @@ export default function Scene3D() {
 
   const handleSetView = (v) => {
     setView(v);
-    if (v === 'live') addLog(`📷 CÁMARA: Activando vista en vivo...`);
-    else addLog(`🎨 3D: Cambiado a modelo digital.`);
+    if (v === 'live') {
+      addLog(`📷 CÁMARA: Activando vista en vivo...`);
+    } else {
+      addLog(`🎨 3D: Cambiado a modelo digital.`);
+    }
+  };
+
+  const handleConnect = () => {
+    addLog(`📷 CAM: Conectando a ${camUrl || 'N/A'}`);
+    setHasError(false);
   };
 
   return (
@@ -241,23 +252,52 @@ export default function Scene3D() {
       {/* Live Camera */}
       {view === 'live' && (
         <div style={{ width: '100%', height: '100%', background: '#000', position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-          {camUrl ? (
+          {camUrl && !hasError ? (
             <img
               src={camUrl}
               alt="Cámara en vivo"
               style={{ width: '100%', height: '100%', objectFit: 'contain' }}
-              onError={e => e.target.src = 'https://images.unsplash.com/photo-1585320806297-9794b3e4eeae?auto=format&fit=crop&q=80&w=800'}
+              onError={() => setHasError(true)}
             />
           ) : (
-            <div style={{ textAlign: 'center', color: 'var(--text-dim)' }}>
-              <i className="fas fa-video" style={{ fontSize: 48, marginBottom: 16, color: 'var(--text-dim)' }} />
-              <div style={{ fontSize: 13 }}>Ingresa la URL de la cámara en el panel de control</div>
-              <div style={{ fontSize: 10, marginTop: 8, color: '#475569' }}>Ej: https://abc.pinggy-free.link/video</div>
+            <div style={{ textAlign: 'center', color: 'var(--text-dim)', padding: 20 }}>
+              <i className="fas fa-video-slash" style={{ fontSize: 48, marginBottom: 16, color: hasError ? 'var(--accent-red)' : 'var(--text-dim)' }} />
+              {hasError ? (
+                <>
+                  <div style={{ fontSize: 14, color: 'var(--text-main)', marginBottom: 8 }}>Error al cargar el video</div>
+                  <div style={{ fontSize: 11, maxWidth: 300, margin: '0 auto 16px' }}>
+                    Si usas Pinggy, haz clic abajo para autorizar la conexión en una nueva pestaña y luego regresa aquí.
+                  </div>
+                  <a
+                    href={camUrl}
+                    target="_blank"
+                    rel="noreferrer"
+                    style={{
+                      display: 'inline-block',
+                      padding: '8px 16px',
+                      background: 'rgba(255,255,255,0.1)',
+                      color: 'white',
+                      borderRadius: 8,
+                      textDecoration: 'none',
+                      fontSize: 11,
+                      fontWeight: 700,
+                      border: '1px solid rgba(255,255,255,0.2)'
+                    }}
+                  >
+                    ABRIR ENLACE Y AUTORIZAR <i className="fas fa-external-link-alt" style={{ marginLeft: 6 }} />
+                  </a>
+                </>
+              ) : (
+                <>
+                  <div style={{ fontSize: 13 }}>Ingresa la URL de la cámara abajo</div>
+                  <div style={{ fontSize: 10, marginTop: 8, color: '#475569' }}>Ej: https://abc.pinggy-free.link/stream</div>
+                </>
+              )}
             </div>
           )}
-          <div className="live-badge">
-            <i className="fas fa-circle" />
-            EN VIVO
+          <div className="live-badge" style={{ background: hasError ? 'rgba(0,0,0,0.5)' : 'rgba(239,68,68,0.3)' }}>
+            <i className="fas fa-circle" style={{ color: hasError ? '#64748b' : '#ef4444' }} />
+            {hasError ? 'DISCONNECTED' : 'EN VIVO'}
           </div>
         </div>
       )}
@@ -274,6 +314,7 @@ export default function Scene3D() {
         border: '1px solid rgba(255,255,255,0.08)',
         display: 'flex', alignItems: 'center', gap: 6,
         letterSpacing: 0.5,
+        zIndex: 10,
       }}>
         <span>☀️</span>
         <span style={{ color: 'var(--text-main)' }}>DÍA {cropDay}</span>
@@ -289,6 +330,7 @@ export default function Scene3D() {
         borderRadius: 10,
         border: '1px solid rgba(255,255,255,0.06)',
         padding: 4, gap: 4,
+        zIndex: 10,
       }}>
         {[
           { id: '3d', icon: 'fa-cube', label: '3D' },
@@ -297,6 +339,7 @@ export default function Scene3D() {
           <button
             key={btn.id}
             id={`view-btn-${btn.id}`}
+            type="button"
             onClick={() => handleSetView(btn.id)}
             style={{
               border: 'none', cursor: 'pointer',
@@ -319,12 +362,13 @@ export default function Scene3D() {
           position: 'absolute', bottom: 16, left: '50%', transform: 'translateX(-50%)',
           width: '90%', maxWidth: 400,
           display: 'flex', gap: 8,
+          zIndex: 10,
         }}>
           <input
             type="text"
             value={camUrl}
-            onChange={e => setCamUrl(e.target.value)}
-            placeholder="URL Cámara (Ej: https://abc.pinggy.link/video)"
+            onChange={e => updateCamUrl(e.target.value)}
+            placeholder="URL Cámara (Ej: https://.../stream)"
             style={{
               flex: 1,
               background: 'rgba(0,0,0,0.7)',
@@ -338,7 +382,8 @@ export default function Scene3D() {
             }}
           />
           <button
-            onClick={() => addLog(`📷 CAM: Conectando a ${camUrl}`)}
+            type="button"
+            onClick={handleConnect}
             style={{
               background: 'var(--primary)',
               border: 'none',

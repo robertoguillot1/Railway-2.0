@@ -139,6 +139,16 @@ export function AppProvider({ children }) {
   const [showOnboarding, setShowOnboarding] = useState(false);
   const [onboardingType, setOnboardingType] = useState('full'); // 'full' or 'abbreviated'
 
+  // ─── Cámara en vivo ─────────────────────────────────────────────────────────
+  const [camUrl, setCamUrl] = useState(() => {
+    return localStorage.getItem('hydro_cam_url') || '';
+  });
+
+  const updateCamUrl = useCallback((url) => {
+    setCamUrl(url);
+    localStorage.setItem('hydro_cam_url', url);
+  }, []);
+
   // ─── Lógica de Simulación (Solo para modo Demo) ─────────────────────────────
   useEffect(() => {
     if (connectionMode === 'demo') {
@@ -380,6 +390,7 @@ export function AppProvider({ children }) {
     showOnboarding, setShowOnboarding, onboardingType, setOnboardingType,
     startCloudPolling, stopCloudPolling,
     isInitialDataLoaded, loadInitialData,
+    camUrl, updateCamUrl,
   };
 
   return <AppContext.Provider value={value}>{children}</AppContext.Provider>;

@@ -10,7 +10,10 @@ export default function TerminalPanel() {
   const bottomRef = useRef(null);
 
   useEffect(() => {
-    bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
+    const terminalDiv = bottomRef.current?.parentElement;
+    if (terminalDiv) {
+      terminalDiv.scrollTop = terminalDiv.scrollHeight;
+    }
   }, [logs]);
 
   const getColor = (msg) => {
