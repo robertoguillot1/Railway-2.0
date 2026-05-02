@@ -297,7 +297,9 @@ export default function Scene3D() {
                   <div style={{ fontSize: 11, maxWidth: 350, margin: '0 auto 16px', lineHeight: 1.4 }}>
                     {camUrl.includes('pinggy') && !camUrl.includes('/stream') && !camUrl.includes('/video') ? (
                       <span style={{ color: 'var(--accent-amber)' }}>
-                        <b>Sugerencia:</b> La ruta /stream no existe en tu cámara. <br/>Intenta cambiar al modo <b>WEB (IFRAME)</b> arriba a la derecha.
+                        <b>Sugerencia:</b> Parece que falta la ruta. <br/>
+                        Para <b>IP Webcam</b> usa <b>/video</b> al final. <br/>
+                        Para <b>ESP32-CAM</b> usa <b>/stream</b> al final.
                       </span>
                     ) : (
                       "Si usas Pinggy, haz clic abajo para autorizar la conexión en una nueva pestaña y luego regresa aquí."
@@ -405,7 +407,7 @@ export default function Scene3D() {
             type="text"
             value={camUrl}
             onChange={e => updateCamUrl(e.target.value)}
-            placeholder="URL Cámara (Ej: https://.../stream)"
+            placeholder="URL Cámara (Ej: https://.../video)"
             style={{
               flex: 1,
               background: 'rgba(0,0,0,0.7)',
@@ -435,8 +437,6 @@ export default function Scene3D() {
           >
             <i className="fas fa-plug" />
           </button>
-        </div>
-      )}
         </div>
       )}
 
