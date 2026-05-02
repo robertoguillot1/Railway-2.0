@@ -253,10 +253,10 @@ export default function Scene3D() {
         <div style={{ width: '100%', height: '100%', background: '#000', position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
           
           {camUrl && !hasError ? (
-            <img
+            <iframe
               src={camUrl}
-              alt="Cámara en vivo"
-              style={{ width: '100%', height: '100%', objectFit: 'contain' }}
+              title="Cámara en vivo"
+              style={{ width: '100%', height: '100%', border: 'none', background: '#000' }}
               onError={() => setHasError(true)}
             />
           ) : (
@@ -266,14 +266,12 @@ export default function Scene3D() {
                 <>
                   <div style={{ fontSize: 14, color: 'var(--text-main)', marginBottom: 8 }}>Error al cargar el video</div>
                   <div style={{ fontSize: 11, maxWidth: 350, margin: '0 auto 16px', lineHeight: 1.4 }}>
-                    {camUrl.includes('pinggy') && !camUrl.includes('/stream') && !camUrl.includes('/video') ? (
+                    {camUrl.includes('pinggy') ? (
                       <span style={{ color: 'var(--accent-amber)' }}>
-                        <b>Sugerencia:</b> Parece que falta la ruta. <br/>
-                        Para <b>IP Webcam</b> usa <b>/video</b> al final. <br/>
-                        Para <b>ESP32-CAM</b> usa <b>/stream</b> al final.
+                        <b>Aviso de Seguridad:</b> Si ves una pantalla blanca de Pinggy, haz clic en el botón rojo <b>"Enter site"</b> justo aquí arriba para ver el video.
                       </span>
                     ) : (
-                      "Si usas Pinggy, haz clic abajo para autorizar la conexión en una nueva pestaña y luego regresa aquí."
+                      "Asegúrate de que la cámara esté encendida y el túnel activo."
                     )}
                   </div>
                   <div style={{ display: 'flex', gap: 8, justifyContent: 'center' }}>
