@@ -26,7 +26,8 @@ class CustomTokenSerializer(TokenObtainPairSerializer):
 
 class UserSerializer(serializers.ModelSerializer):
     full_name = serializers.SerializerMethodField()
-    is_admin = serializers.SerializerMethodField()
+    # Mapeamos is_admin a is_staff para que sea editable desde el frontend
+    is_admin = serializers.BooleanField(source='is_staff', required=False)
 
     class Meta:
         model = User
@@ -35,9 +36,6 @@ class UserSerializer(serializers.ModelSerializer):
 
     def get_full_name(self, obj):
         return f"{obj.first_name} {obj.last_name}".strip() or obj.username
-
-    def get_is_admin(self, obj):
-        return obj.is_staff or obj.is_superuser
 
 class CreateUserSerializer(serializers.ModelSerializer):
     password = serializers.CharField(write_only=True, min_length=6)
