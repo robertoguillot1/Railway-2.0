@@ -253,10 +253,11 @@ export default function Scene3D() {
         <div style={{ width: '100%', height: '100%', background: '#000', position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
           
           {camUrl && !hasError ? (
-            <iframe
+            <img
+              key={camUrl}
               src={camUrl}
-              title="Cámara en vivo"
-              style={{ width: '100%', height: '100%', border: 'none', background: '#000' }}
+              alt="Cámara en vivo"
+              style={{ width: '100%', height: '100%', objectFit: 'contain' }}
               onError={() => setHasError(true)}
             />
           ) : (
@@ -264,35 +265,50 @@ export default function Scene3D() {
               <i className="fas fa-video-slash" style={{ fontSize: 48, marginBottom: 16, color: hasError ? 'var(--accent-red)' : 'var(--text-dim)' }} />
               {hasError ? (
                 <>
-                  <div style={{ fontSize: 14, color: 'var(--text-main)', marginBottom: 8 }}>Error al cargar el video</div>
+                  <div style={{ fontSize: 14, color: 'var(--text-main)', marginBottom: 8 }}>Error de Conexión</div>
                   <div style={{ fontSize: 11, maxWidth: 350, margin: '0 auto 16px', lineHeight: 1.4 }}>
                     {camUrl.includes('pinggy') ? (
-                      <span style={{ color: 'var(--accent-amber)' }}>
-                        <b>Aviso de Seguridad:</b> Si ves una pantalla blanca de Pinggy, haz clic en el botón rojo <b>"Enter site"</b> justo aquí arriba para ver el video.
+                      <span>
+                        Pinggy requiere una autorización manual. Haz clic en el botón azul para desbloquearlo y luego dale a <b>"Enter site"</b>.
                       </span>
                     ) : (
-                      "Asegúrate de que la cámara esté encendida y el túnel activo."
+                      "No se pudo conectar con la cámara. Verifica que la URL sea correcta y el dispositivo esté en línea."
                     )}
                   </div>
                   <div style={{ display: 'flex', gap: 8, justifyContent: 'center' }}>
-                    <a
-                      href={camUrl}
-                      target="_blank"
-                      rel="noreferrer"
+                    <button
+                      onClick={() => {
+                        window.open(camUrl, 'pinggy_auth', 'width=500,height=600');
+                        setTimeout(() => setHasError(false), 2000);
+                      }}
                       style={{
-                        display: 'inline-block',
-                        padding: '8px 16px',
-                        background: 'rgba(255,255,255,0.1)',
-                        color: 'white',
+                        padding: '10px 20px',
+                        background: 'var(--accent-blue)',
+                        color: '#000',
                         borderRadius: 8,
-                        textDecoration: 'none',
+                        border: 'none',
                         fontSize: 11,
                         fontWeight: 700,
-                        border: '1px solid rgba(255,255,255,0.2)'
+                        cursor: 'pointer'
                       }}
                     >
-                      ABRIR ENLACE Y AUTORIZAR <i className="fas fa-external-link-alt" style={{ marginLeft: 6 }} />
-                    </a>
+                      <i className="fas fa-unlock" style={{ marginRight: 8 }} /> DESBLOQUEAR VIDEO
+                    </button>
+                    <button
+                      onClick={() => setHasError(false)}
+                      style={{
+                        padding: '10px 20px',
+                        background: 'rgba(255,255,255,0.1)',
+                        color: '#fff',
+                        borderRadius: 8,
+                        border: 'none',
+                        fontSize: 11,
+                        fontWeight: 700,
+                        cursor: 'pointer'
+                      }}
+                    >
+                      REINTENTAR
+                    </button>
                   </div>
                 </>
               ) : (
