@@ -145,8 +145,9 @@ export function AppProvider({ children }) {
   });
 
   const updateCamUrl = useCallback((url) => {
-    setCamUrl(url);
-    localStorage.setItem('hydro_cam_url', url);
+    const sanitized = url.trim().replace(/\s/g, '');
+    setCamUrl(sanitized);
+    localStorage.setItem('hydro_cam_url', sanitized);
   }, []);
 
   // ─── Lógica de Simulación (Solo para modo Demo) ─────────────────────────────

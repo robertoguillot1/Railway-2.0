@@ -265,27 +265,53 @@ export default function Scene3D() {
               {hasError ? (
                 <>
                   <div style={{ fontSize: 14, color: 'var(--text-main)', marginBottom: 8 }}>Error al cargar el video</div>
-                  <div style={{ fontSize: 11, maxWidth: 300, margin: '0 auto 16px' }}>
-                    Si usas Pinggy, haz clic abajo para autorizar la conexión en una nueva pestaña y luego regresa aquí.
+                  <div style={{ fontSize: 11, maxWidth: 350, margin: '0 auto 16px', lineHeight: 1.4 }}>
+                    {camUrl.includes('pinggy') && !camUrl.includes('/stream') && !camUrl.includes('/video') ? (
+                      <span style={{ color: 'var(--accent-amber)' }}>
+                        <b>Sugerencia:</b> Parece que falta la ruta del stream. Intenta añadir <b>/stream</b> al final de tu link.
+                      </span>
+                    ) : (
+                      "Si usas Pinggy, haz clic abajo para autorizar la conexión en una nueva pestaña y luego regresa aquí."
+                    )}
                   </div>
-                  <a
-                    href={camUrl}
-                    target="_blank"
-                    rel="noreferrer"
-                    style={{
-                      display: 'inline-block',
-                      padding: '8px 16px',
-                      background: 'rgba(255,255,255,0.1)',
-                      color: 'white',
-                      borderRadius: 8,
-                      textDecoration: 'none',
-                      fontSize: 11,
-                      fontWeight: 700,
-                      border: '1px solid rgba(255,255,255,0.2)'
-                    }}
-                  >
-                    ABRIR ENLACE Y AUTORIZAR <i className="fas fa-external-link-alt" style={{ marginLeft: 6 }} />
-                  </a>
+                  <div style={{ display: 'flex', gap: 8, justifyContent: 'center' }}>
+                    <a
+                      href={camUrl}
+                      target="_blank"
+                      rel="noreferrer"
+                      style={{
+                        display: 'inline-block',
+                        padding: '8px 16px',
+                        background: 'rgba(255,255,255,0.1)',
+                        color: 'white',
+                        borderRadius: 8,
+                        textDecoration: 'none',
+                        fontSize: 11,
+                        fontWeight: 700,
+                        border: '1px solid rgba(255,255,255,0.2)'
+                      }}
+                    >
+                      ABRIR ENLACE Y AUTORIZAR <i className="fas fa-external-link-alt" style={{ marginLeft: 6 }} />
+                    </a>
+                    {camUrl.includes('pinggy') && !camUrl.includes('/stream') && (
+                      <button
+                        type="button"
+                        onClick={() => updateCamUrl(camUrl + (camUrl.endsWith('/') ? 'stream' : '/stream'))}
+                        style={{
+                          padding: '8px 16px',
+                          background: 'var(--primary)',
+                          color: '#0f1520',
+                          borderRadius: 8,
+                          border: 'none',
+                          fontSize: 11,
+                          fontWeight: 700,
+                          cursor: 'pointer'
+                        }}
+                      >
+                        AÑADIR /stream
+                      </button>
+                    )}
+                  </div>
                 </>
               ) : (
                 <>
