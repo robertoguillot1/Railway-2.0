@@ -1,6 +1,7 @@
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
 from .views import me_view, UserManagementViewSet, AuditLogViewSet
+from .proxy_views import CameraProxyView
 from .rbac_views import (
     RolViewSet, RecursoViewSet,
     UsuarioHasRolViewSet, RecursoHasRolViewSet,
@@ -20,5 +21,6 @@ router.register(r'recurso-roles', RecursoHasRolViewSet, basename='recurso-rol')
 urlpatterns = [
     path('me/', me_view, name='user-me'),
     path('mis-recursos/', mis_recursos, name='mis-recursos'),
+    path('cam-proxy/', CameraProxyView.as_view(), name='cam-proxy'),
     path('', include(router.urls)),
 ]

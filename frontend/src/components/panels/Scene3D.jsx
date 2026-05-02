@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from 'react';
 import { useApp } from '../../context/AppContext';
 import { STAGES } from '../../utils/helpers';
 import * as THREE from 'three';
+import { BASE_URL } from '../../api/hydroApi';
 
 function build3DScene(container, cropDay, pumpOn) {
   const scene = new THREE.Scene();
@@ -225,6 +226,12 @@ export default function Scene3D() {
 
   const stage = STAGES[Math.min(cropDay - 1, STAGES.length - 1)];
 
+  // Build proxy URL: the Django backend fetches the camera on our behalf,
+  // bypassing Pinggy's CORS/interstitial restriction.
+  const proxyUrl = camUrl
+    ? `${BASE_URL}/api/v1/core/cam-proxy/?url=${encodeURIComponent(camUrl)}`
+    : null;
+
   const handleSetView = (v) => {
     setView(v);
     if (v === 'live') {
@@ -252,10 +259,10 @@ export default function Scene3D() {
       {view === 'live' && (
         <div style={{ width: '100%', height: '100%', background: '#000', position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
           
-          {camUrl && !hasError ? (
+          {proxyUrl && !hasError ? (
             <img
-              key={camUrl}
-              src={camUrl}
+              key={proxyUrl}
+              src={proxyUrl}
               alt="Cámara en vivo"
               style={{ width: '100%', height: '100%', objectFit: 'contain' }}
               onError={() => setHasError(true)}
