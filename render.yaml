@@ -24,7 +24,7 @@ services:
         value: "https://*.onrender.com"
 
   # React Frontend Static Site
-  - type: static
+  - type: web
     name: hydrosmart-frontend
     env: static
     plan: free
