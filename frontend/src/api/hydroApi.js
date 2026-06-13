@@ -1,7 +1,7 @@
 // src/api/hydroApi.js
 // Capa de API: Centraliza todas las peticiones al backend Django en Railway
 
-let rawUrl = import.meta.env.VITE_API_URL || 'https://railway-20-production-7eaa.up.railway.app';
+let rawUrl = import.meta.env.VITE_API_URL || 'https://hydrosmart-backend.onrender.com';
 if (rawUrl && !rawUrl.startsWith('http://') && !rawUrl.startsWith('https://')) {
   rawUrl = `https://${rawUrl}`;
 }
