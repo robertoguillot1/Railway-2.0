@@ -10,3 +10,6 @@ python manage.py migrate
 # Create superuser automatically if it doesn't exist
 python manage.py shell -c "from django.contrib.auth.models import User; User.objects.filter(username='admin').exists() or User.objects.create_superuser('admin', 'admin@example.com', 'admin123')"
 
+# Initialize default rules, zones, and devices
+python init_db_defaults.py
+
