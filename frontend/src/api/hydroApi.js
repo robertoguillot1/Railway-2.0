@@ -1,7 +1,11 @@
 // src/api/hydroApi.js
 // Capa de API: Centraliza todas las peticiones al backend Django en Railway
 
-export const BASE_URL = import.meta.env.VITE_API_URL || 'https://railway-20-production-7eaa.up.railway.app';
+let rawUrl = import.meta.env.VITE_API_URL || 'https://railway-20-production-7eaa.up.railway.app';
+if (rawUrl && !rawUrl.startsWith('http://') && !rawUrl.startsWith('https://')) {
+  rawUrl = `https://${rawUrl}`;
+}
+export const BASE_URL = rawUrl;
 
 function apiFetch(path, options = {}) {
   const token = localStorage.getItem('hydro_token');

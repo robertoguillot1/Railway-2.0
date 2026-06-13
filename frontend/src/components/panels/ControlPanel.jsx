@@ -3,6 +3,7 @@
 
 import { useState } from 'react';
 import { useApp } from '../../context/AppContext';
+import { BASE_URL } from '../../api/hydroApi';
 
 export default function ControlPanel() {
   const {
@@ -26,7 +27,7 @@ export default function ControlPanel() {
     setConnecting(true);
     addLog('🌐 RED: Contactando backend en Railway...');
     try {
-      const url = import.meta.env.VITE_API_URL || 'https://railway-20-production-7eaa.up.railway.app';
+      const url = BASE_URL;
       const token = localStorage.getItem('hydro_token');
       const headers = { 'Content-Type': 'application/json' };
       if (token) headers['Authorization'] = `Bearer ${token}`;
