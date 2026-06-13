@@ -1,5 +1,5 @@
 // src/api/hydroApi.js
-// Capa de API: Centraliza todas las peticiones al backend Django en Railway
+// Capa de API: Centraliza todas las peticiones al backend Django en Render
 
 let rawUrl = import.meta.env.VITE_API_URL || 'https://hydrosmart-backend.onrender.com';
 if (rawUrl && !rawUrl.startsWith('http://') && !rawUrl.startsWith('https://')) {
@@ -104,7 +104,7 @@ export const updateIrrigationRule = (id, data) =>
 export const deleteIrrigationRule = (id) =>
   apiFetch(`/api/v1/automation/rules/${id}/`, { method: 'DELETE' });
 
-// ─── LEGACY (Railway v1 endpoint) ─────────────────────────────────────────────
+// ─── LEGACY (Render v1 endpoint) ─────────────────────────────────────────────
 export const getTelemetriaHistorial = () =>
   apiFetch('/api/telemetria/');
 

@@ -25,7 +25,7 @@ export default function ControlPanel() {
   // ─── Conectar a la nube ─────────────────────────────────────────────────────
   const handleConnect = async () => {
     setConnecting(true);
-    addLog('🌐 RED: Contactando backend en Railway...');
+    addLog('🌐 RED: Contactando backend en Render...');
     try {
       const url = BASE_URL;
       const token = localStorage.getItem('hydro_token');
@@ -51,12 +51,12 @@ export default function ControlPanel() {
         if (res2.ok) {
           setIsConnected(true);
           setConnectionMode('cloud');
-          addLog('✅ NUBE: Conectado al endpoint legacy de Railway.');
+          addLog('✅ NUBE: Conectado al endpoint legacy de Render.');
           startCloudPolling();
         } else throw new Error('Sin respuesta');
       }
     } catch (err) {
-      addLog('❌ RED: No se pudo conectar con la base de datos en Railway.');
+      addLog('❌ RED: No se pudo conectar con la base de datos en Render.');
       setIsConnected(false);
     } finally {
       setConnecting(false);
@@ -172,7 +172,7 @@ export default function ControlPanel() {
             >
               {connecting
                 ? <><i className="fas fa-spinner spinning" style={{ marginRight: 5 }} />CONECTANDO...</>
-                : <><i className="fas fa-cloud" style={{ marginRight: 5 }} />RAILWAY</>
+                : <><i className="fas fa-cloud" style={{ marginRight: 5 }} />RENDER</>
               }
             </button>
           </div>
@@ -181,7 +181,7 @@ export default function ControlPanel() {
           {connectionMode === 'cloud' && (
             <div className="info-box" style={{ marginTop: 10 }}>
               <i className="fas fa-database" style={{ color: 'var(--primary)', marginRight: 6 }} />
-              Conectado a <b>Railway</b>. Datos actualizados cada <b>3 segundos</b>.
+              Conectado a <b>Render</b>. Datos actualizados cada <b>5 segundos</b>.
             </div>
           )}
         </div>
