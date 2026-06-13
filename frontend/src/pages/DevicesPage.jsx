@@ -153,7 +153,6 @@ export default function DevicesPage() {
     const data = {
       name: fd.get('name'),
       device_id: fd.get('device_id'),
-      farm: selectedFarm?.id,
       zone: fd.get('zone') ? parseInt(fd.get('zone')) : null,
       active: true
     };
