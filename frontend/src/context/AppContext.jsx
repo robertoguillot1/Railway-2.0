@@ -202,47 +202,60 @@ export function AppProvider({ children }) {
 
   const lastReadingIdRef = useRef(null);
 
+  // ─── Cargar Dispositivos de la Nube (Una sola vez o tras cambios) ─────────────
+  const loadDevices = useCallback(async () => {
+    if (connectionMode === 'cloud') {
+      try {
+        const devs = await getDevices();
+        setDevices(devs);
+        if (selectedDeviceIdRef.current === null && devs.length > 0) {
+          handleSetSelectedDevice(devs[0].id);
+        }
+      } catch (err) {
+        console.error('[HYDRO] Error cargando dispositivos:', err);
+      }
+    }
+  }, [connectionMode, handleSetSelectedDevice]);
+
+  // Cargar dispositivos cuando se cambia a modo nube
+  useEffect(() => {
+    if (connectionMode === 'cloud' && isInitialDataLoaded) {
+      loadDevices();
+    }
+  }, [connectionMode, isInitialDataLoaded, loadDevices]);
+
   // ─── Polling de datos en nube ─────────────────────────────────────────────────
-  // SOLUCIÓN DEFINITIVA: Usar ref en lugar de closure para leer el deviceId actual.
-  // Esto evita que el polling use un valor "congelado" del selectedDeviceId.
+  // Optimizado para no re-solicitar fincas, zonas ni dispositivos en cada ciclo de 5s.
   const startCloudPolling = useCallback(async () => {
     const poll = async () => {
       try {
-        // Leer el deviceId ACTUAL desde el ref (no desde closure)
         const currentDeviceId = selectedDeviceIdRef.current;
 
-        const [readings, acts, alts, evts, farmsRes, zonesRes, devs] = await Promise.allSettled([
+        const [readings, acts, alts, evts] = await Promise.allSettled([
           getLatestReadings(),
           getActuators(),
           getSystemAlerts(),
           getSystemEvents(),
-          getFarms(),
-          getZones(),
-          getDevices(),
         ]);
 
         // ─── Procesar lecturas de sensores ───────────────────────────────────
         if (readings.status === 'fulfilled' && readings.value?.length) {
           const allReadings = readings.value;
           
-          // Detectar si hay datos nuevos comparando el ID de la lectura más reciente
           const newestId = allReadings[0]?.id;
           const isNewData = newestId !== lastReadingIdRef.current;
           lastReadingIdRef.current = newestId;
 
           const byType = {};
 
-          // Filtrar SOLO las lecturas del dispositivo seleccionado
           const relevantReadings = currentDeviceId
             ? allReadings.filter(r => r.device_id === currentDeviceId)
-            : []; // Si no hay dispositivo seleccionado, no hay lecturas relevantes
+            : [];
 
-          // Ordenar por timestamp descendente y tomar el más reciente de cada tipo
           const sorted = [...relevantReadings].sort((a, b) =>
             new Date(b.timestamp) - new Date(a.timestamp)
           );
 
-          // Solo el valor más reciente por tipo de sensor
           sorted.forEach(r => {
             const type = r.sensor_type?.toLowerCase();
             if (type && byType[type] === undefined) {
@@ -251,7 +264,6 @@ export function AppProvider({ children }) {
           });
 
           if (Object.keys(byType).length > 0) {
-            // Log para la terminal (Solo si hay datos nuevos para evitar spam)
             if (isNewData) {
               const temp = byType.air_temp || byType.water_temp || 0;
               const humS = byType.soil_moisture || 0;
@@ -276,9 +288,6 @@ export function AppProvider({ children }) {
               ec: [...prev.ec.slice(1), byType.ec ?? prev.ec.at(-1) ?? 0],
             }));
           } else {
-            // Si no hay lecturas relevantes para el dispositivo seleccionado,
-            // podemos optar por resetear a 0 o mantener el estado.
-            // Para responder al usuario, reseteamos si no hay dispositivo.
             if (!currentDeviceId) {
               setTelemetry(prev => ({
                 ...prev,
@@ -298,7 +307,6 @@ export function AppProvider({ children }) {
             : acts.value;
           setActuators(relevantActs);
 
-          // Sincronizar estado real de la bomba
           const pump = relevantActs.find(a =>
             a.actuator_type === 'PUMP' || a.name?.toLowerCase().includes('bomba')
           );
@@ -309,26 +317,16 @@ export function AppProvider({ children }) {
 
         if (alts.status === 'fulfilled') setAlerts(alts.value);
         if (evts.status === 'fulfilled') setEvents(evts.value);
-        if (farmsRes.status === 'fulfilled') setFarms(farmsRes.value);
-        if (zonesRes.status === 'fulfilled') setZones(zonesRes.value);
-        if (devs.status === 'fulfilled') {
-          setDevices(devs.value);
-          // Auto-seleccionar solo si no hay nada seleccionado aún
-          if (selectedDeviceIdRef.current === null && devs.value.length > 0) {
-            handleSetSelectedDevice(devs.value[0].id);
-          }
-        }
       } catch (err) {
         console.error('[HYDRO] Error en polling:', err);
         addLog('⚠️ ALERTA: Error al procesar datos de la nube.');
       }
     };
 
-    // Primera llamada inmediata
     await poll();
-    // Polling continuo cada 3 segundos
-    pollingRef.current = setInterval(poll, 3000);
-  }, [addLog, handleSetSelectedDevice]); // ← ya NO depende de selectedDeviceId
+    // Reducido a cada 5 segundos para aliviar la carga del servidor Render
+    pollingRef.current = setInterval(poll, 5000);
+  }, [addLog]);
 
   const stopCloudPolling = useCallback(() => {
     if (pollingRef.current) clearInterval(pollingRef.current);
@@ -339,8 +337,11 @@ export function AppProvider({ children }) {
   useEffect(() => {
     if (selectedFarm && isInitialDataLoaded) {
       getZones(selectedFarm.id).then(setZones);
+      if (connectionMode === 'cloud') {
+        loadDevices();
+      }
     }
-  }, [selectedFarm, isInitialDataLoaded]);
+  }, [selectedFarm, isInitialDataLoaded, connectionMode, loadDevices]);
 
   // ─── Carga inicial de datos (para Onboarding) ───────────────────────────────
   const loadInitialData = useCallback(async () => {
@@ -349,7 +350,6 @@ export function AppProvider({ children }) {
       setFarms(farmsData);
       
       if (farmsData.length > 0) {
-        // Intentar recuperar la finca guardada, si no, tomar la primera
         const savedFarm = JSON.parse(localStorage.getItem('hydro_selected_farm'));
         const currentFarm = savedFarm && farmsData.find(f => f.id === savedFarm.id) 
           ? savedFarm 
@@ -360,13 +360,21 @@ export function AppProvider({ children }) {
         
         const zonesData = await getZones(currentFarm.id);
         setZones(zonesData);
+        
+        if (connectionMode === 'cloud') {
+          const devs = await getDevices();
+          setDevices(devs);
+          if (selectedDeviceIdRef.current === null && devs.length > 0) {
+            handleSetSelectedDevice(devs[0].id);
+          }
+        }
       }
     } catch (err) {
       console.error('[HYDRO] Error cargando datos iniciales:', err);
     } finally {
       setIsInitialDataLoaded(true);
     }
-  }, []);
+  }, [connectionMode, handleSetSelectedDevice]);
 
   const value = {
     connectionMode, setConnectionMode,
@@ -391,6 +399,7 @@ export function AppProvider({ children }) {
     showOnboarding, setShowOnboarding, onboardingType, setOnboardingType,
     startCloudPolling, stopCloudPolling,
     isInitialDataLoaded, loadInitialData,
+    loadDevices,
     camUrl, updateCamUrl,
   };
 

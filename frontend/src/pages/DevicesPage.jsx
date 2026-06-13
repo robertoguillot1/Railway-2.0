@@ -131,7 +131,7 @@ function DeviceCard({ device, onEdit, onDelete }) {
 }
 
 export default function DevicesPage() {
-  const { devices, selectedFarm, zones } = useApp();
+  const { devices, selectedFarm, zones, loadDevices } = useApp();
   const [showModal, setShowModal] = useState(false);
   const [editingDevice, setEditingDevice] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -141,6 +141,7 @@ export default function DevicesPage() {
     try {
       await deleteDevice(id);
       alert('Dispositivo eliminado');
+      await loadDevices();
     } catch {
       alert('Error al eliminar dispositivo');
     }
@@ -166,6 +167,7 @@ export default function DevicesPage() {
       }
       setShowModal(false);
       setEditingDevice(null);
+      await loadDevices();
     } catch {
       alert('Error al guardar dispositivo');
     } finally {
