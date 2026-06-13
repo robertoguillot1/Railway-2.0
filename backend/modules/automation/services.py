@@ -1,3 +1,4 @@
+from django.db.models import Q
 from .models import SensorReading, SystemEvent, SystemAlert, IrrigationRule
 from modules.devices.models import Actuator, ActuatorStateHistory
 from modules.core.services import WeatherService
@@ -32,9 +33,11 @@ class IrrigationService:
     @staticmethod
     def trigger_actuators(rule, reading, state):
         """
-        Enciende o apaga los actuadores vinculados a la zona de la regla.
+        Enciende o apaga los actuadores vinculados a la zona de la regla o al dispositivo del sensor.
         """
-        actuators = Actuator.objects.filter(device__zone=rule.zone)
+        actuators = Actuator.objects.filter(
+            Q(device__zone=rule.zone) | Q(device=reading.sensor.device)
+        )
         
         for actuator in actuators:
             if actuator.state != state:
