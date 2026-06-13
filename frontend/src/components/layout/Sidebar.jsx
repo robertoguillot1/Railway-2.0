@@ -72,7 +72,7 @@ export default function Sidebar() {
   );
 
   return (
-    <aside style={{
+    <aside className="sidebar" style={{
       position: 'fixed',
       left: 0, top: 'var(--header-h)', bottom: 0,
       width: 'var(--sidebar-w)',
