@@ -235,7 +235,7 @@ export function AppProvider({ children }) {
           const byType = {};
 
           const relevantReadings = currentDeviceId
-            ? allReadings.filter(r => r.device_id === currentDeviceId)
+            ? allReadings.filter(r => String(r.device_id) === String(currentDeviceId))
             : [];
 
           const sorted = [...relevantReadings].sort((a, b) =>
