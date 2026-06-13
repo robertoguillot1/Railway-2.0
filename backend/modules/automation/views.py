@@ -18,6 +18,29 @@ class SensorReadingViewSet(viewsets.ModelViewSet):
     queryset = SensorReading.objects.all()
     serializer_class = SensorReadingSerializer
 
+    def get_queryset(self):
+        queryset = SensorReading.objects.all()
+        sensor_id = self.request.query_params.get('sensor')
+        if sensor_id:
+            queryset = queryset.filter(sensor_id=sensor_id)
+        
+        # Ordenar por fecha decreciente por defecto
+        return queryset.order_by('-timestamp')
+
+    def list(self, request, *args, **kwargs):
+        queryset = self.filter_queryset(self.get_queryset())
+        limit = request.query_params.get('limit')
+        if limit:
+            try:
+                queryset = queryset[:int(limit)]
+            except ValueError:
+                queryset = queryset[:100]
+        else:
+            queryset = queryset[:100]
+            
+        serializer = self.get_serializer(queryset, many=True)
+        return Response(serializer.data)
+
     @action(detail=False, methods=['get'])
     def export_excel(self, request):
         """
@@ -176,12 +199,38 @@ class LegacyTelemetriaView(APIView):
         return Response(history)
 
 class SystemEventViewSet(viewsets.ModelViewSet):
-    queryset = SystemEvent.objects.all()
+    queryset = SystemEvent.objects.all().order_by('-start_time')
     serializer_class = SystemEventSerializer
 
+    def list(self, request, *args, **kwargs):
+        queryset = self.filter_queryset(self.get_queryset())
+        limit = request.query_params.get('limit')
+        if limit:
+            try:
+                queryset = queryset[:int(limit)]
+            except ValueError:
+                queryset = queryset[:100]
+        else:
+            queryset = queryset[:100]
+        serializer = self.get_serializer(queryset, many=True)
+        return Response(serializer.data)
+
 class SystemAlertViewSet(viewsets.ModelViewSet):
-    queryset = SystemAlert.objects.all()
+    queryset = SystemAlert.objects.all().order_by('-created_at')
     serializer_class = SystemAlertSerializer
+
+    def list(self, request, *args, **kwargs):
+        queryset = self.filter_queryset(self.get_queryset())
+        limit = request.query_params.get('limit')
+        if limit:
+            try:
+                queryset = queryset[:int(limit)]
+            except ValueError:
+                queryset = queryset[:100]
+        else:
+            queryset = queryset[:100]
+        serializer = self.get_serializer(queryset, many=True)
+        return Response(serializer.data)
 
 class IrrigationRuleViewSet(AuditMixin, viewsets.ModelViewSet):
     queryset = IrrigationRule.objects.all()
