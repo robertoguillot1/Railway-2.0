@@ -599,7 +599,7 @@ body {
   .header-subtitle { display: none !important; }
   .header-status-text { display: none !important; }
 
-  aside { display: none !important; } /* Hide fixed sidebar */
+  .sidebar { display: none !important; } /* Hide fixed navigation sidebar */
 
   .dashboard-grid { gap: 12px; }
   .glass-panel { border-radius: 12px; }
