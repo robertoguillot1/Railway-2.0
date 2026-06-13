@@ -25,16 +25,18 @@ export default function ControlPanel() {
   // ─── Conectar a la nube ─────────────────────────────────────────────────────
   const handleConnect = async () => {
     setConnecting(true);
-    addLog('🌐 RED: Contactando backend en Render...');
+    addLog('🌐 RED: Contactando backend en Render... (puede tardar hasta 60s si el servidor está dormido)');
     try {
       const url = BASE_URL;
       const token = localStorage.getItem('hydro_token');
       const headers = { 'Content-Type': 'application/json' };
       if (token) headers['Authorization'] = `Bearer ${token}`;
 
+      // Render free tier tarda 30-50s en despertar (cold start).
+      // Usamos 60s de timeout para dar margen suficiente.
       const res = await fetch(`${url}/api/v1/automation/readings/?limit=1`, { 
         headers,
-        signal: AbortSignal.timeout(6000) 
+        signal: AbortSignal.timeout(60000) 
       });
 
       if (res.ok) {
@@ -42,21 +44,34 @@ export default function ControlPanel() {
         setConnectionMode('cloud');
         addLog('✅ NUBE: Conexión establecida. Polling activo cada 5s.');
         startCloudPolling();
+      } else if (res.status === 401) {
+        addLog('🔑 RED: Token expirado. Por favor cierra sesión y vuelve a entrar.');
+        setIsConnected(false);
       } else {
         // Intentar endpoint legacy
         const res2 = await fetch(`${url}/api/telemetria/`, { 
           headers,
-          signal: AbortSignal.timeout(4000) 
+          signal: AbortSignal.timeout(60000) 
         });
         if (res2.ok) {
           setIsConnected(true);
           setConnectionMode('cloud');
           addLog('✅ NUBE: Conectado al endpoint legacy de Render.');
           startCloudPolling();
-        } else throw new Error('Sin respuesta');
+        } else if (res2.status === 401) {
+          addLog('🔑 RED: Token expirado. Por favor cierra sesión y vuelve a entrar.');
+        } else {
+          addLog(`❌ RED: El servidor respondió con error ${res.status}. Intenta de nuevo.`);
+        }
+        setIsConnected(false);
       }
     } catch (err) {
-      addLog('❌ RED: No se pudo conectar con la base de datos en Render.');
+      if (err.name === 'TimeoutError' || err.name === 'AbortError') {
+        addLog('⏳ RED: El servidor no respondió en 60 segundos. Puede estar en mantenimiento.');
+      } else {
+        addLog('❌ RED: No se pudo conectar con Render. Verifica tu conexión a internet.');
+      }
+      console.error('[HYDRO] Error de conexión:', err);
       setIsConnected(false);
     } finally {
       setConnecting(false);

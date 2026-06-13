@@ -21,49 +21,57 @@ export function useSimulator() {
     if (connectionMode !== 'demo') return;
 
     const interval = setInterval(() => {
-      setTelemetry(prev => {
-        const pump = pumpRef.current;
-        let { humidity, temperature, airHumidity, ph, ec, waterLevel } = prev;
+      const prev = telemetry;
+      const pump = pumpRef.current;
+      let { humidity, temperature, airHumidity, ph, ec, waterLevel } = prev;
 
-        // Simular variaciones físicas
-        if (pump) {
-          humidity += 0.45;
-          waterLevel -= 0.1;
-          ph += (Math.random() - 0.52) * 0.02;
-        } else {
-          humidity -= 0.12;
-          ph += (Math.random() - 0.5) * 0.03;
+      // Simular variaciones físicas
+      if (pump) {
+        humidity += 0.45;
+        waterLevel -= 0.1;
+        ph += (Math.random() - 0.52) * 0.02;
+      } else {
+        humidity -= 0.12;
+        ph += (Math.random() - 0.5) * 0.03;
+      }
+
+      temperature += (Math.random() - 0.48) * 0.12;
+      airHumidity += (Math.random() - 0.5) * 0.3;
+      ec += (Math.random() - 0.5) * 0.01;
+      waterLevel = Math.max(20, Math.min(100, waterLevel));
+
+      humidity = Math.min(Math.max(humidity, 0), 100);
+      temperature = Math.min(Math.max(temperature, 15), 42);
+      airHumidity = Math.min(Math.max(airHumidity, 20), 100);
+      ph = Math.min(Math.max(ph, 4.5), 8.5);
+      ec = Math.min(Math.max(ec, 0.5), 4.0);
+
+      let pumpChanged = false;
+      let pumpStateChangedTo = false;
+
+      // Auto-riego
+      if (operationMode === 'AUTO') {
+        if (humidity <= irrigationThreshold && !pumpRef.current) {
+          pumpRef.current = true;
+          pumpChanged = true;
+          pumpStateChangedTo = true;
+        } else if (humidity >= stopThreshold && pumpRef.current) {
+          pumpRef.current = false;
+          pumpChanged = true;
+          pumpStateChangedTo = false;
         }
+      }
 
-        temperature += (Math.random() - 0.48) * 0.12;
-        airHumidity += (Math.random() - 0.5) * 0.3;
-        ec += (Math.random() - 0.5) * 0.01;
-        waterLevel = Math.max(20, Math.min(100, waterLevel));
+      setTelemetry(prev => ({
+        ...prev,
+        humidity, temperature, airHumidity, ph, ec, waterLevel,
+        pumpState: pumpRef.current,
+        signal: 0,
+      }));
 
-        humidity = Math.min(Math.max(humidity, 0), 100);
-        temperature = Math.min(Math.max(temperature, 15), 42);
-        airHumidity = Math.min(Math.max(airHumidity, 20), 100);
-        ph = Math.min(Math.max(ph, 4.5), 8.5);
-        ec = Math.min(Math.max(ec, 0.5), 4.0);
-
-        // Auto-riego
-        if (operationMode === 'AUTO') {
-          if (humidity <= irrigationThreshold && !pumpRef.current) {
-            pumpRef.current = true;
-            addLog(`🤖 AUTO: Humedad ${Math.round(humidity)}% — Bomba ACTIVADA`);
-          } else if (humidity >= stopThreshold && pumpRef.current) {
-            pumpRef.current = false;
-            addLog(`🤖 AUTO: Humedad ${Math.round(humidity)}% — Bomba DETENIDA`);
-          }
-        }
-
-        return {
-          ...prev,
-          humidity, temperature, airHumidity, ph, ec, waterLevel,
-          pumpState: pumpRef.current,
-          signal: 0,
-        };
-      });
+      if (pumpChanged) {
+        addLog(`🤖 AUTO: Humedad ${Math.round(humidity)}% — Bomba ${pumpStateChangedTo ? 'ACTIVADA' : 'DETENIDA'}`);
+      }
 
       // Actualizar historial
       setSensorHistory(prev => ({

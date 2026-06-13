@@ -152,20 +152,7 @@ export function AppProvider({ children }) {
 
   // ─── Lógica de Simulación (Solo para modo Demo) ─────────────────────────────
   useEffect(() => {
-    if (connectionMode === 'demo') {
-      simRef.current = setInterval(() => {
-        setTelemetry(prev => ({
-          ...prev,
-          humidity: Math.max(0, Math.min(100, (prev.humidity || 80) + (prev.pumpState ? 2 : -0.5) + (Math.random() - 0.5))),
-          temperature: 24 + Math.random() * 2,
-          airHumidity: 55 + Math.random() * 10,
-          ph: 6.2 + Math.random() * 0.6,
-          ec: 1.5 + Math.random() * 0.5,
-          waterLevel: Math.max(0, (prev.waterLevel || 70) - (prev.pumpState ? 0.2 : 0)),
-        }));
-      }, 3000);
-    } else {
-      if (simRef.current) clearInterval(simRef.current);
+    if (connectionMode !== 'demo') {
       // Reiniciar a 0 si entramos en modo nube
       setTelemetry({
         humidity: 0, temperature: 0, airHumidity: 0, ph: 0, ec: 0, waterLevel: 0, pumpState: false, signal: 0
@@ -174,7 +161,6 @@ export function AppProvider({ children }) {
         humidity: Array(30).fill(0), temperature: Array(30).fill(0), ph: Array(30).fill(0), ec: Array(30).fill(0)
       });
     }
-    return () => { if (simRef.current) clearInterval(simRef.current); };
   }, [connectionMode]);
 
   // ─── Logger ─────────────────────────────────────────────────────────────────
