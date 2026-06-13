@@ -99,13 +99,16 @@ class LegacyTelemetriaView(APIView):
                 )
                 SensorReading.objects.create(sensor=sensor, value=payload.get('humedad_suelo'))
 
-            # 5. Actualizar Estado de la Bomba
+            # 5. Obtener o crear Actuador de la Bomba
+            pump, _ = Actuator.objects.get_or_create(
+                device=device,
+                actuator_type=Actuator.ActuatorType.PUMP,
+                defaults={"name": "Bomba de Riego"}
+            )
+            
+            # Solo actualizamos el estado en la BD si el payload de telemetría lo especifica explícitamente
+            # (Útil si se presiona el botón físico en el ESP32)
             if 'bomba' in payload:
-                pump, _ = Actuator.objects.get_or_create(
-                    device=device,
-                    actuator_type=Actuator.ActuatorType.PUMP,
-                    defaults={"name": "Bomba de Riego"}
-                )
                 new_state = payload.get('bomba', False)
                 if pump.state != new_state:
                     pump.state = new_state
@@ -124,8 +127,12 @@ class LegacyTelemetriaView(APIView):
                     severity=SystemAlert.Severity.INFO
                 )
 
-            print(f"📡 [WOKWI] Datos procesados exitosamente en Railway.")
-            return Response({"success": True, "message": "Datos integrados correctamente"})
+            print(f"📡 [ESP32] Datos procesados exitosamente en Render.")
+            return Response({
+                "success": True, 
+                "message": "Datos integrados correctamente",
+                "bomba": pump.state
+            })
         except Exception as e:
             import traceback
             error_details = traceback.format_exc()
