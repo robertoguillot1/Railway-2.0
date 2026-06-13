@@ -32,10 +32,7 @@ services:
     staticPublishPath: dist
     envVars:
       - key: VITE_API_URL
-        fromService:
-          type: web
-          name: hydrosmart-backend
-          property: host
+        value: "https://hydrosmart-backend.onrender.com"
 
 databases:
   - name: hydrosmart-db
