@@ -113,6 +113,21 @@ class LegacyTelemetriaView(APIView):
                 if pump.state != new_state:
                     pump.state = new_state
                     pump.save()
+                    # Registrar evento manual en la base de datos si el dispositivo tiene zona asignada
+                    if device.zone:
+                        SystemEvent.objects.create(
+                            zone=device.zone,
+                            actuator=pump,
+                            description=f"👤 MANUAL: Bomba {'activada' if new_state else 'desactivada'} desde el botón físico del ESP32."
+                        )
+
+            # Registrar logs de eventos personalizados enviados por el ESP32 (como cambios de modo)
+            if 'log_evento' in payload and device.zone:
+                SystemEvent.objects.create(
+                    zone=device.zone,
+                    actuator=pump,
+                    description=payload.get('log_evento')
+                )
 
             # --- Lógica de Alerta de Conexión ---
             recent_alert = SystemAlert.objects.filter(
