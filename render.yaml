@@ -1,0 +1,45 @@
+# Render Blueprint Specification
+# Use this file to deploy the entire HydroSmart Pro stack to Render.com
+services:
+  # Django Backend Web Service
+  - type: web
+    name: hydrosmart-backend
+    env: python
+    plan: free
+    rootDir: backend
+    buildCommand: "./build.sh"
+    startCommand: "gunicorn config.wsgi --log-file -"
+    envVars:
+      - key: DATABASE_URL
+        fromDatabase:
+          name: hydrosmart-db
+          property: connectionString
+      - key: DJANGO_DEBUG
+        value: "False"
+      - key: PYTHON_VERSION
+        value: 3.11.9
+      - key: CORS_ALLOWED_ORIGINS
+        value: "http://localhost:5173" # Add your frontend render URL here once deployed
+      - key: CSRF_TRUSTED_ORIGINS
+        value: "https://*.onrender.com"
+
+  # React Frontend Static Site
+  - type: static
+    name: hydrosmart-frontend
+    env: static
+    plan: free
+    rootDir: frontend
+    buildCommand: "npm install && npm run build"
+    staticPublishPath: dist
+    envVars:
+      - key: VITE_API_URL
+        fromService:
+          type: web
+          name: hydrosmart-backend
+          property: host
+
+databases:
+  - name: hydrosmart-db
+    databaseName: railway
+    user: railway_user
+    plan: free

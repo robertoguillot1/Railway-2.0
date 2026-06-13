@@ -107,8 +107,15 @@ STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 CSRF_TRUSTED_ORIGINS = [
     'https://railway-20-production-7eaa.up.railway.app',
     'http://railway-20-production-7eaa.up.railway.app',
-    'https://*.up.railway.app'
+    'https://*.up.railway.app',
+    'https://*.onrender.com',
+    'http://*.onrender.com',
 ]
+
+csrf_trusted_env = os.environ.get('CSRF_TRUSTED_ORIGINS')
+if csrf_trusted_env:
+    CSRF_TRUSTED_ORIGINS.extend([url.strip() for url in csrf_trusted_env.split(',') if url.strip()])
+
 
 # Asegurar que WhiteNoise sirva archivos en todas las condiciones
 WHITENOISE_USE_FINDERS = True
@@ -142,9 +149,13 @@ SIMPLE_JWT = {
     'AUTH_HEADER_TYPES': ('Bearer',),
 }
 
-# CORS estricto: solo permitimos tu frontend de Railway y local
 CORS_ALLOWED_ORIGINS = [
     "https://observant-courage-production.up.railway.app",
     "http://localhost:5173",
     "http://127.0.0.1:5173",
 ]
+
+cors_allowed_env = os.environ.get('CORS_ALLOWED_ORIGINS')
+if cors_allowed_env:
+    CORS_ALLOWED_ORIGINS.extend([url.strip() for url in cors_allowed_env.split(',') if url.strip()])
+
