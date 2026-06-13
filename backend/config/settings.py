@@ -154,6 +154,7 @@ CORS_ORIGIN_ALLOW_ALL = True
 
 CORS_ALLOWED_ORIGINS = [
     "https://observant-courage-production.up.railway.app",
+    "https://hydrosmart-frontend-mjux.onrender.com",
     "http://localhost:5173",
     "http://127.0.0.1:5173",
 ]
